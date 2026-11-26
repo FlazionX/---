@@ -24,6 +24,7 @@ public sealed class SceneEditorForm : Form
     private readonly List<Bitmap> _recordFrames = new();
     private readonly System.Diagnostics.Stopwatch _fpsWatch = new();
     private int _paintCount;
+    private SectorEffectPack? _activeEffectPack;
     private readonly Label _fpsLabel = new() { AutoSize = true, ForeColor = Color.FromArgb(151,161,174), Padding = new Padding(8,7,8,0), Text = "FPS: --" };
     private readonly Stack<string> _undo = new(), _redo = new();
     private readonly string _autosave = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Sector","Autosave","scene-0.7.json");
@@ -61,7 +62,7 @@ public sealed class SceneEditorForm : Form
         Controls.Add(root);
         var bar = new FlowLayoutPanel { Dock=DockStyle.Fill, WrapContents=false, AutoScroll=true, BackColor=Bg, Padding=new Padding(0,5,0,0) };
         AddButton(bar,"Новый",NewScene); AddButton(bar,"Открыть",OpenScene); AddButton(bar,"Сохранить",SaveScene,true);
-        AddButton(bar,"+ Текст",AddText); AddButton(bar,"+ Изображение",AddImage); AddButton(bar,"Дублировать",DuplicateSelected); AddButton(bar,"По центру",CenterSelected); AddButton(bar,"Сетка",ToggleGrid); AddButton(bar,"−",()=>SetZoom(_zoom-0.1f)); AddButton(bar,"+",()=>SetZoom(_zoom+0.1f)); AddButton(bar,"Отменить",Undo); AddButton(bar,"Повторить",Redo); AddButton(bar,"Запись GIF / MP4",ToggleGifRecording); AddButton(bar,"Шрифты",()=>{ResourceLibrary.EnsureFolders();System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe",ResourceLibrary.Fonts){UseShellExecute=true});}); AddButton(bar,"Пресет",ApplyPreset); AddButton(bar,"Палитра",ApplyPalette); bar.Controls.Add(_fpsLabel);
+        AddButton(bar,"+ Текст",AddText); AddButton(bar,"+ Изображение",AddImage); AddButton(bar,"Дублировать",DuplicateSelected); AddButton(bar,"По центру",CenterSelected); AddButton(bar,"Сетка",ToggleGrid); AddButton(bar,"−",()=>SetZoom(_zoom-0.1f)); AddButton(bar,"+",()=>SetZoom(_zoom+0.1f)); AddButton(bar,"Отменить",Undo); AddButton(bar,"Повторить",Redo); AddButton(bar,"Запись GIF / MP4",ToggleGifRecording); AddButton(bar,"Шрифты",()=>{ResourceLibrary.EnsureFolders();System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe",ResourceLibrary.Fonts){UseShellExecute=true});}); AddButton(bar,"Пресет",ApplyPreset); AddButton(bar,"Палитра",ApplyPalette); AddButton(bar,"Эффект",ApplyEffectPack); bar.Controls.Add(_fpsLabel);
         root.Controls.Add(bar,0,0);
 
         var body = new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=3, RowCount=1, BackColor=Bg };
@@ -214,6 +215,41 @@ public sealed class SceneEditorForm : Form
             else if(item.ImageBase64!=null){try{using var ms=new MemoryStream(Convert.FromBase64String(item.ImageBase64));using var im=Image.FromStream(ms);g.DrawImage(im,rect);}catch{}}
             if(item.Id==_selected){using var p=new Pen(Orange,2/_scale){DashStyle=DashStyle.Dash};g.DrawRectangle(p,item.X,item.Y,item.Width,item.Height);using var b=new SolidBrush(Orange);g.FillRectangle(b,item.X+item.Width-8/_scale,item.Y+item.Height-8/_scale,8/_scale,8/_scale);}
         }
+
+        if (_activeEffectPack is { } effect)
+        {
+            var alpha = Math.Clamp(effect.Intensity * 2, 0, 200);
+            var tint = ColorTranslator.FromHtml(effect.Color);
+            if (effect.Effect == "scanlines")
+            {
+                using var pen = new Pen(Color.FromArgb(alpha, tint), 1 / _scale);
+                for (var y = 0; y < _canvasHeight; y += 4) g.DrawLine(pen, 0, y, _canvasWidth, y);
+            }
+            else if (effect.Effect == "glitch")
+            {
+                using var brush = new SolidBrush(Color.FromArgb(Math.Min(170, alpha), tint));
+                var bands = Math.Max(1, effect.Intensity / 8);
+                for (var i = 0; i < bands; i++)
+                {
+                    var y = Random.Shared.Next(Math.Max(1, _canvasHeight));
+                    var h = Random.Shared.Next(2, 10);
+                    g.FillRectangle(brush, Random.Shared.Next(0, Math.Max(1, _canvasWidth / 3)), y, Random.Shared.Next(20, Math.Max(21, _canvasWidth / 2)), h);
+                }
+            }
+            else if (effect.Effect == "vignette")
+            {
+                using var path = new System.Drawing.Drawing2D.GraphicsPath();
+                path.AddEllipse(-_canvasWidth * .18f, -_canvasHeight * .18f, _canvasWidth * 1.36f, _canvasHeight * 1.36f);
+                using var brush = new System.Drawing.Drawing2D.PathGradientBrush(path) { CenterColor = Color.Transparent, SurroundColors = [Color.FromArgb(Math.Min(180, alpha), Color.Black)] };
+                g.FillRectangle(brush, 0, 0, _canvasWidth, _canvasHeight);
+            }
+            else if (effect.Effect == "noise")
+            {
+                using var brush = new SolidBrush(Color.FromArgb(Math.Min(160, alpha), tint));
+                var dots = effect.Intensity * 12;
+                for (var i = 0; i < dots; i++) g.FillRectangle(brush, Random.Shared.Next(_canvasWidth), Random.Shared.Next(_canvasHeight), 1 / _scale + 1, 1 / _scale + 1);
+            }
+        }
     }
     private void CanvasDown(object? s,MouseEventArgs e)
     {
@@ -317,6 +353,22 @@ public sealed class SceneEditorForm : Form
         finally { try { Directory.Delete(temp, true); } catch { } }
     }
 
+
+
+    private void ApplyEffectPack()
+    {
+        ResourceLibrary.EnsureFolders();
+        using var dialog = new OpenFileDialog { InitialDirectory = ResourceLibrary.Plugins, Filter = "Пакеты эффектов Сектора (*.sector-effect.json)|*.sector-effect.json" };
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        try
+        {
+            _activeEffectPack = System.Text.Json.JsonSerializer.Deserialize<SectorEffectPack>(File.ReadAllText(dialog.FileName))
+                ?? throw new InvalidDataException("Файл пакета эффектов пуст.");
+            if (_activeEffectPack.Effect is not ("scanlines" or "glitch" or "vignette" or "noise")) throw new InvalidDataException("Неизвестный эффект.");
+            _canvas.Invalidate(); SetStatus("Эффект применён: " + _activeEffectPack.Name);
+        }
+        catch (Exception ex) { Error("Пакет эффектов", ex); }
+    }
 
     private void ApplyPreset()
     {
