@@ -480,6 +480,9 @@ public sealed class MainForm : Form
 
     private void ClearHistory()
     {
+        if (SectorPreferences.Load().ConfirmBeforeClearingHistory &&
+            MessageBox.Show(this, "Очистить всю историю действий?", "Подтверждение", MessageBoxButtons.YesNo, MessageBoxIcon.Question) != DialogResult.Yes)
+            return;
         _history.Clear();
         try { if (File.Exists(_historyPath)) File.Delete(_historyPath); }
         catch (Exception ex) { ShowError("Очистка истории", ex); }
