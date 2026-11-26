@@ -59,7 +59,7 @@ public static class DemoExporter
             _ => "<div class='tag'>CLASSIC WINDOW</div><h1>Демонстрационная панель</h1><p>Сценарий готов к просмотру. Это макет интерфейса, а не системное окно.</p><div class='progress'><i></i></div><small>LOCAL PREVIEW · SAFE</small>"
         };
 
-        return $@""<!doctype html>
+        return $@"<!doctype html>
 <html lang='ru'><head><meta charset='utf-8'><meta name='viewport' content='width=device-width,initial-scale=1'>
 <title>{title} — Сектор</title>
 <style>
