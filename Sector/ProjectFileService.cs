@@ -53,14 +53,16 @@ public static class ProjectFileService
 
     public static void Validate(SimulationTemplate template)
     {
+        if (template is null) throw new InvalidDataException("Проект не содержит данных.");
         if (string.IsNullOrWhiteSpace(template.Id) || template.Id.Length > 80)
             throw new InvalidDataException("Некорректный идентификатор проекта.");
         if (string.IsNullOrWhiteSpace(template.Name) || template.Name.Trim().Length > 40)
             throw new InvalidDataException("Название должно содержать от 1 до 40 символов.");
         if (string.IsNullOrWhiteSpace(template.Description) || template.Description.Trim().Length > 120)
             throw new InvalidDataException("Описание должно содержать от 1 до 120 символов.");
-        if (template.Mark.Length > 8) throw new InvalidDataException("Значок не должен превышать 8 символов.");
-        if (template.Version.Length > 12) throw new InvalidDataException("Версия не должна превышать 12 символов.");
+        if (template.Mark is null || template.Mark.Length > 8) throw new InvalidDataException("Значок не должен превышать 8 символов.");
+        if (template.Version is null || template.Version.Length > 12) throw new InvalidDataException("Версия не должна превышать 12 символов.");
+        if (template.Mood is null || template.Mood.Length > 80) throw new InvalidDataException("Некорректная подпись проекта.");
         if (!Enum.IsDefined(template.Style)) throw new InvalidDataException("Неизвестный стиль проекта.");
     }
 }
