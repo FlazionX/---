@@ -315,6 +315,11 @@ public static class FontLibrary
     public static Font CreateFont(string family, float size, FontStyle style = FontStyle.Regular)
     {
         LoadImportedFonts();
+        lock (Gate)
+        {
+            var imported = Fonts.Families.FirstOrDefault(x => x.Name.Equals(family, StringComparison.OrdinalIgnoreCase));
+            if (imported is not null) return new Font(imported, size, style, GraphicsUnit.Pixel);
+        }
         try { return new Font(family, size, style, GraphicsUnit.Pixel); }
         catch { return new Font(FontFamily.GenericSansSerif, size, style, GraphicsUnit.Pixel); }
     }
