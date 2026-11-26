@@ -38,10 +38,11 @@ public sealed class EditorForm : Form
 
     private void BuildUi()
     {
-        var root = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 3, ColumnCount = 1, Padding = new Padding(18), BackColor = Bg };
+        var root = new TableLayoutPanel { Dock = DockStyle.Fill, RowCount = 4, ColumnCount = 1, Padding = new Padding(18), BackColor = Bg };
         root.RowStyles.Add(new RowStyle(SizeType.Absolute, 66));
         root.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
-        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 62));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 48));
+        root.RowStyles.Add(new RowStyle(SizeType.Absolute, 24));
         Controls.Add(root);
 
         var heading = new Panel { Dock = DockStyle.Fill };
@@ -129,11 +130,10 @@ public sealed class EditorForm : Form
         footer.Controls.Add(MakeButton("Экспорт HTML + BAT", ExportProject));
         root.Controls.Add(footer, 0, 2);
 
-        _status.Dock = DockStyle.Bottom;
-        _status.Height = 24;
+        _status.Dock = DockStyle.Fill;
         _status.ForeColor = Muted;
         _status.Text = "Новый проект готов.";
-        root.Controls.Add(_status, 0, 2);
+        root.Controls.Add(_status, 0, 3);
     }
 
     private static void AddField(TableLayoutPanel parent, string label, TextBox box, int row, int maxLength, bool multiline = false)
@@ -229,6 +229,16 @@ public sealed class EditorForm : Form
     private void SaveProject()
     {
         if (!TryBuildTemplate(out var template)) return;
+        if (!string.IsNullOrWhiteSpace(_currentPath))
+        {
+            try
+            {
+                ProjectFileService.Save(template, _currentPath);
+                UpdateStatus("Проект сохранён: " + Path.GetFileName(_currentPath));
+            }
+            catch (Exception ex) { ShowError("Сохранение проекта", ex); }
+            return;
+        }
         using var dialog = new SaveFileDialog
         {
             Title = "Сохранить проект Сектора",
@@ -256,6 +266,7 @@ public sealed class EditorForm : Form
             CheckFileExists = true
         };
         if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        if (!ConfirmDiscard()) return;
         try
         {
             var template = ProjectFileService.Load(dialog.FileName);
