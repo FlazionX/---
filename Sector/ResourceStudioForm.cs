@@ -93,7 +93,7 @@ public sealed class ResourceStudioForm : Form
     private ListBox? _fontList;
     private readonly ListView _resources = new() { Dock = DockStyle.Fill, View = View.Details, FullRowSelect = true };
     private readonly Label _status = new() { Dock = DockStyle.Bottom, Height = 30, TextAlign = ContentAlignment.MiddleLeft };
-    private readonly Color _bg = Color.FromArgb(20,23,28), _surface = Color.FromArgb(29,34,41), _text = Color.FromArgb(235,238,242), _orange = Color.FromArgb(235,133,43);
+    private readonly Color _bg = Color.FromArgb(243,243,243), _surface = Color.FromArgb(255,255,255), _text = Color.FromArgb(32,32,32), _orange = Color.FromArgb(0,120,215);
 
     public ResourceStudioForm()
     {
@@ -124,7 +124,7 @@ public sealed class ResourceStudioForm : Form
     private Button AddButton(Control parent, string title, Action action, bool primary = false)
     {
         var button = new Button { Text = title, AutoSize = true, Height = 32, FlatStyle = FlatStyle.Flat,
-            BackColor = primary ? _orange : Color.FromArgb(42,49,58), ForeColor = primary ? Color.Black : _text,
+            BackColor = primary ? _orange : Color.FromArgb(232,232,232), ForeColor = primary ? Color.Black : _text,
             Padding = new Padding(10,2,10,2), Margin = new Padding(0,0,8,0), Cursor = Cursors.Hand };
         button.FlatAppearance.BorderSize = 0; button.Click += (_,_) => action(); parent.Controls.Add(button); return button;
     }
@@ -163,11 +163,11 @@ public sealed class ResourceStudioForm : Form
         var bar = Toolbar(tab);
         AddButton(bar, "Сохранить палитру", () =>
         {
-            using var d = new ColorDialog { FullOpen = true, Color = Color.FromArgb(235,133,43) };
+            using var d = new ColorDialog { FullOpen = true, Color = Color.FromArgb(0,120,215) };
             if (d.ShowDialog(this) != DialogResult.OK) return;
             try
             {
-                ResourceLibrary.SavePalette(new SectorPalette("Palette-" + DateTime.Now.ToString("yyyyMMdd-HHmmss"), "#101820", "#EDF3F6", ColorTranslator.ToHtml(d.Color)));
+                ResourceLibrary.SavePalette(new SectorPalette("Palette-" + DateTime.Now.ToString("yyyyMMdd-HHmmss"), "#F3F3F3", "#202020", ColorTranslator.ToHtml(d.Color)));
                 SetStatus("Палитра сохранена.");
                 RefreshResources();
             }
@@ -266,15 +266,15 @@ public sealed class ResourceStudioForm : Form
 public sealed class PresetDialog : Form
 {
     public SectorPreset? Result { get; private set; }
-    private readonly TextBox _name = new() { Text = "Retro Blue" }, _description = new() { Text = "Синяя ретро-тема" }, _bg = new() { Text = "#101820" }, _fg = new() { Text = "#EDF3F6" }, _accent = new() { Text = "#EB852B" }, _font = new() { Text = "Consolas" };
+    private readonly TextBox _name = new() { Text = "Retro Blue" }, _description = new() { Text = "Синяя ретро-тема" }, _bg = new() { Text = "#F3F3F3" }, _fg = new() { Text = "#202020" }, _accent = new() { Text = "#0078D7" }, _font = new() { Text = "Consolas" };
     private readonly NumericUpDown _size = new() { Minimum = 6, Maximum = 180, Value = 24 };
     public PresetDialog()
     {
-        Text = "Новый пресет"; Size = new Size(440,430); StartPosition = FormStartPosition.CenterParent; BackColor = Color.FromArgb(20,23,28); ForeColor = Color.White;
+        Text = "Новый пресет"; Size = new Size(440,430); StartPosition = FormStartPosition.CenterParent; BackColor = Color.FromArgb(243,243,243); ForeColor = Color.White;
         var panel = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(16), ColumnCount = 2, RowCount = 8 };
         Controls.Add(panel);
         Add("Название", _name); Add("Описание", _description); Add("Фон (#RRGGBB)", _bg); Add("Текст (#RRGGBB)", _fg); Add("Акцент (#RRGGBB)", _accent); Add("Шрифт", _font); Add("Размер", _size);
-        var save = new Button { Text = "Сохранить", Dock = DockStyle.Fill, BackColor = Color.FromArgb(235,133,43) };
+        var save = new Button { Text = "Сохранить", Dock = DockStyle.Fill, BackColor = Color.FromArgb(0,120,215) };
         save.Click += (_,_) => { Result = new SectorPreset(_name.Text, _description.Text, _bg.Text, _fg.Text, _accent.Text, _font.Text, (int)_size.Value); try { ResourceLibrary.SavePreset(Result); DialogResult = DialogResult.OK; Close(); } catch (Exception ex) { MessageBox.Show(this, ex.Message); } };
         panel.Controls.Add(save, 1, 7);
     }
@@ -292,14 +292,14 @@ public sealed class EffectDialog : Form
     public SectorEffectPack? Result { get; private set; }
     public EffectDialog()
     {
-        Text = "Новый пакет эффектов"; Size = new Size(420,280); StartPosition = FormStartPosition.CenterParent; BackColor = Color.FromArgb(20,23,28); ForeColor = Color.White;
+        Text = "Новый пакет эффектов"; Size = new Size(420,280); StartPosition = FormStartPosition.CenterParent; BackColor = Color.FromArgb(243,243,243); ForeColor = Color.White;
         var name = new TextBox { Text = "My Effect" }; var effect = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
         effect.Items.AddRange(["scanlines","glitch","vignette","noise"]); effect.SelectedIndex = 0;
-        var color = new TextBox { Text = "#EB852B" }; var intensity = new NumericUpDown { Minimum = 0, Maximum = 100, Value = 50 };
+        var color = new TextBox { Text = "#0078D7" }; var intensity = new NumericUpDown { Minimum = 0, Maximum = 100, Value = 50 };
         var grid = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(14), ColumnCount = 2, RowCount = 5 }; Controls.Add(grid);
         void Add(string label, Control control, int row) { grid.Controls.Add(new Label { Text = label, Dock = DockStyle.Fill, ForeColor = Color.Silver, TextAlign = ContentAlignment.MiddleLeft },0,row); control.Dock = DockStyle.Fill; grid.Controls.Add(control,1,row); }
         Add("Название",name,0); Add("Эффект",effect,1); Add("Цвет",color,2); Add("Интенсивность",intensity,3);
-        var save = new Button { Text = "Сохранить", Dock = DockStyle.Fill, BackColor = Color.FromArgb(235,133,43) };
+        var save = new Button { Text = "Сохранить", Dock = DockStyle.Fill, BackColor = Color.FromArgb(0,120,215) };
         save.Click += (_,_) => { Result = new SectorEffectPack(name.Text,effect.Text,color.Text,(int)intensity.Value); try { ResourceLibrary.SaveEffectPack(Result); DialogResult=DialogResult.OK; Close(); } catch(Exception ex){MessageBox.Show(this,ex.Message);} };
         grid.Controls.Add(save,1,4);
     }
