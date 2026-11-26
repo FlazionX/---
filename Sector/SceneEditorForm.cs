@@ -13,7 +13,7 @@ public sealed class SceneEditorForm : Form
     private readonly Panel _host = new() { Dock = DockStyle.Fill, AutoScroll = true, BackColor = Color.FromArgb(12,14,18) };
     private readonly ListBox _layers = new() { Dock = DockStyle.Fill, BackColor = Surface2, ForeColor = White, BorderStyle = BorderStyle.None };
     private readonly TextBox _name = new() { Text = "Новая сцена" };
-    private readonly TextBox _text = new();
+    private readonly TextBox _text = new();\n    private readonly TextBox _objectName = new();
     private readonly NumericUpDown _x = Num(0,3840), _y = Num(0,2160), _w = Num(8,3840,240), _h = Num(8,2160,60), _font = Num(6,180,28);
     private readonly ComboBox _resolution = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 145 };
     private readonly Label _status = new() { Dock = DockStyle.Fill, ForeColor = Muted, TextAlign = ContentAlignment.MiddleLeft };
@@ -69,8 +69,8 @@ public sealed class SceneEditorForm : Form
         var right=new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=1, RowCount=2, Padding=new Padding(10), BackColor=Surface };
         right.RowStyles.Add(new RowStyle(SizeType.Absolute,30)); right.RowStyles.Add(new RowStyle(SizeType.Percent,100));
         right.Controls.Add(Header("СВОЙСТВА"),0,0);
-        var props=new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=1, RowCount=9, AutoScroll=true, BackColor=Surface };
-        for(int i=0;i<9;i++) props.RowStyles.Add(new RowStyle(SizeType.Absolute,i==1?100:62));
+        var props=new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=1, RowCount=10, AutoScroll=true, BackColor=Surface };
+        for(int i=0;i<10;i++) props.RowStyles.Add(new RowStyle(SizeType.Absolute,i==2?100:62));
         AddField(props,"Название сцены",_name,0); AddField(props,"Текст объекта",_text,1,true);
         AddField(props,"X",_x,2); AddField(props,"Y",_y,3); AddField(props,"Ширина",_w,4); AddField(props,"Высота",_h,5); AddField(props,"Размер шрифта",_font,6);
         var colorPanel=new Panel { Dock=DockStyle.Fill, BackColor=Surface }; colorPanel.Controls.Add(new Label { Text="Цвет текста",Dock=DockStyle.Top,Height=22,ForeColor=Muted });
@@ -129,8 +129,8 @@ public sealed class SceneEditorForm : Form
     private void SelectCurrent()
     {
         var e=_items.FirstOrDefault(x=>x.Id==_selected);_loading=true;
-        if(e!=null){_text.Text=e.Text;_x.Value=Clamp(e.X,_x);_y.Value=Clamp(e.Y,_y);_w.Value=Clamp(e.Width,_w);_h.Value=Clamp(e.Height,_h);_font.Value=Clamp(e.FontSize,_font);_color=e.ColorHex;}
-        else{_text.Clear();_x.Value=0;_y.Value=0;_w.Value=8;_h.Value=8;_font.Value=28;}
+        if(e!=null){_objectName.Text=e.Name;_text.Text=e.Text;_x.Value=Clamp(e.X,_x);_y.Value=Clamp(e.Y,_y);_w.Value=Clamp(e.Width,_w);_h.Value=Clamp(e.Height,_h);_font.Value=Clamp(e.FontSize,_font);_color=e.ColorHex;}
+        else{_objectName.Clear();_text.Clear();_x.Value=0;_y.Value=0;_w.Value=8;_h.Value=8;_font.Value=28;}
         _loading=false;_canvas.Invalidate();
     }
     private static decimal Clamp(float v,NumericUpDown n)=>Math.Clamp((decimal)Math.Round(v),n.Minimum,n.Maximum);
@@ -138,7 +138,7 @@ public sealed class SceneEditorForm : Form
     {
         var i=_items.FindIndex(e=>e.Id==_selected);if(i<0){SetStatus("Выберите объект на сцене или в слоях.");return;}
         PushUndo();var e=_items[i];var w=(float)_w.Value;var h=(float)_h.Value;
-        _items[i]=e with{Text=_text.Text,X=Math.Clamp((float)_x.Value,0,_canvasWidth-w),Y=Math.Clamp((float)_y.Value,0,_canvasHeight-h),Width=w,Height=h,FontSize=(float)_font.Value,ColorHex=_color};
+        _items[i]=e with{Name=string.IsNullOrWhiteSpace(_objectName.Text)?"Объект":_objectName.Text.Trim(),Text=_text.Text,X=Math.Clamp((float)_x.Value,0,_canvasWidth-w),Y=Math.Clamp((float)_y.Value,0,_canvasHeight-h),Width=w,Height=h,FontSize=(float)_font.Value,ColorHex=_color};
         Changed();
     }
     private int _canvasWidth=1280,_canvasHeight=720;
