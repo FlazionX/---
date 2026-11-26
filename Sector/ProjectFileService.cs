@@ -1,3 +1,4 @@
+using System.Drawing;
 using System.Text.Json;
 
 namespace Sector;
@@ -6,16 +7,30 @@ public static class ProjectFileService
 {
     private static readonly JsonSerializerOptions Options = new() { WriteIndented = true };
 
+    private sealed record ProjectDocument(
+        string Id, string Name, string Description, string Mark,
+        string Accent, string Style, string Mood, string Version);
+
     public static void Save(SimulationTemplate template, string path)
     {
         Validate(template);
+        var document = new ProjectDocument(template.Id, template.Name, template.Description,
+            template.Mark, ColorTranslator.ToHtml(template.Accent), template.Style.ToString(),
+            template.Mood, template.Version);
         var fullPath = Path.GetFullPath(path);
         var directory = Path.GetDirectoryName(fullPath);
         if (string.IsNullOrWhiteSpace(directory)) throw new IOException("Не удалось определить папку проекта.");
         Directory.CreateDirectory(directory);
         var temporary = fullPath + ".tmp";
-        File.WriteAllText(temporary, JsonSerializer.Serialize(template, Options), new System.Text.UTF8Encoding(false));
-        File.Move(temporary, fullPath, overwrite: true);
+        try
+        {
+            File.WriteAllText(temporary, JsonSerializer.Serialize(document, Options), new System.Text.UTF8Encoding(false));
+            File.Move(temporary, fullPath, overwrite: true);
+        }
+        finally
+        {
+            if (File.Exists(temporary)) File.Delete(temporary);
+        }
     }
 
     public static SimulationTemplate Load(string path)
@@ -23,8 +38,15 @@ public static class ProjectFileService
         var info = new FileInfo(path);
         if (!info.Exists) throw new FileNotFoundException("Файл проекта не найден.", path);
         if (info.Length > 256 * 1024) throw new InvalidDataException("Файл проекта слишком большой.");
-        var template = JsonSerializer.Deserialize<SimulationTemplate>(File.ReadAllText(path))
+        var document = JsonSerializer.Deserialize<ProjectDocument>(File.ReadAllText(path))
             ?? throw new InvalidDataException("Файл проекта пустой или повреждённый.");
+        if (!Enum.TryParse<SimulationStyle>(document.Style, ignoreCase: false, out var style))
+            throw new InvalidDataException("Неизвестный стиль проекта.");
+        if (!ColorTranslator.FromHtml(document.Accent).IsKnownColor &&
+            !document.Accent.StartsWith("#", StringComparison.Ordinal))
+            throw new InvalidDataException("Некорректный цвет проекта.");
+        var template = new SimulationTemplate(document.Id, document.Name, document.Description,
+            document.Mark, ColorTranslator.FromHtml(document.Accent), style, document.Mood, document.Version);
         Validate(template);
         return template;
     }
