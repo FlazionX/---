@@ -84,6 +84,7 @@ public sealed class MainForm : Form
         };
         body.Controls.Add(sidebar, 0, 0);
         AddNav(sidebar, "Библиотека", ShowLibrary, true);
+        AddNav(sidebar, "Редактор", ShowEditor);
         AddNav(sidebar, "Мои файлы", ShowFiles);
         AddNav(sidebar, "Виртуальная среда", ShowEnvironment);
         AddNav(sidebar, "История", ShowHistory);
@@ -237,6 +238,12 @@ public sealed class MainForm : Form
         card.Controls.Add(title);
         card.Controls.Add(preview);
         return card;
+    }
+
+    private void ShowEditor()
+    {
+        using var editor = new EditorForm();
+        editor.ShowDialog(this);
     }
 
     private void ShowFiles()
