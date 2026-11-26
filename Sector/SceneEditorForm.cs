@@ -20,7 +20,7 @@ public sealed class SceneEditorForm : Form
     private readonly Label _status = new() { Dock = DockStyle.Fill, ForeColor = Muted, TextAlign = ContentAlignment.MiddleLeft };
     private readonly System.Windows.Forms.Timer _timer = new() { Interval = 1500 };
     private readonly Stack<string> _undo = new(), _redo = new();
-    private readonly string _autosave = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Sector","Autosave","scene-0.5.json");
+    private readonly string _autosave = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Sector","Autosave","scene-0.7.json");
     private string _selected = "", _bg = "#101820", _color = "#F0A04B", _path = "";
     private float _scale = 1;
     private bool _loading, _drag, _resize, _dirty, _showGrid = true;
@@ -29,10 +29,16 @@ public sealed class SceneEditorForm : Form
 
     public SceneEditorForm()
     {
-        Text = "Сектор — Scene Editor 0.5.0"; StartPosition = FormStartPosition.CenterParent;
+        Text = "Сектор — Scene Editor 0.7.0"; StartPosition = FormStartPosition.CenterParent;
         Size = new Size(1450,900); MinimumSize = new Size(1100,700); BackColor = Bg; ForeColor = White;
         Font = new Font("Segoe UI",9f); KeyPreview = true;
-        BuildUi(); RestoreOrCreate();
+        BuildUi();
+        var preferences = SectorPreferences.Load();
+        _timer.Interval = Math.Clamp(preferences.AutosaveSeconds, 1, 30) * 1000;
+        _showGrid = preferences.ShowGridByDefault;
+        if (_resolution.Items.Contains(preferences.DefaultResolution))
+            _resolution.SelectedItem = preferences.DefaultResolution;
+        RestoreOrCreate();
         _timer.Tick += (_,_) => Autosave();
         _timer.Start();
         KeyDown += Shortcuts;
