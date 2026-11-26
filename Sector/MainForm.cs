@@ -64,7 +64,7 @@ public sealed class MainForm : Form
         };
         var edition = new Label
         {
-            Text = "VIRTUAL STUDIO     /     2015–2016", Dock = DockStyle.Right, Width = 310,
+            Text = "VIRTUAL STUDIO     /     2014–2016", Dock = DockStyle.Right, Width = 310,
             ForeColor = Muted, Font = new Font("Segoe UI", 8.5f),
             TextAlign = ContentAlignment.MiddleRight
         };
