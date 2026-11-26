@@ -398,7 +398,9 @@ public sealed class MainForm : Form
     private static void OpenFolder(string path)
     {
         Directory.CreateDirectory(path);
-        var start = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };\n        start.ArgumentList.Add(path);\n        Process.Start(start);
+        var start = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };
+        start.ArgumentList.Add(path);
+        Process.Start(start);
     }
 
     private void AddHistory(string name, string action)
