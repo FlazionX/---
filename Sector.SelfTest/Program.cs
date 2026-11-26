@@ -72,6 +72,8 @@ try
     catch (InvalidDataException) { invalidElementRejected = true; }
     Check(invalidElementRejected, "Invalid scene element coordinates must be rejected.");
 
+    Check(SimulationCatalog.All.Count == 10, "The retro simulation library should contain ten themes.");
+
     foreach (var template in SimulationCatalog.All)
     {
         var output = DemoExporter.Export(template, exports);
@@ -86,11 +88,13 @@ try
               !launcher.Contains("cipher", StringComparison.OrdinalIgnoreCase) &&
               !launcher.Contains("reg add", StringComparison.OrdinalIgnoreCase),
             $"Unsafe command found in launcher for {template.Id}.");
-        Check(File.ReadAllText(html).Contains("НЕ БЛОКИРУЕТ WINDOWS", StringComparison.Ordinal),
+        var htmlContent = File.ReadAllText(html);
+        Check(htmlContent.Contains("speechSynthesis", StringComparison.Ordinal), $"Browser narration control missing for {template.Id}.");
+        Check(htmlContent.Contains("НЕ БЛОКИРУЕТ WINDOWS", StringComparison.Ordinal),
             $"Safety notice missing from HTML export for {template.Id}.");
     }
 
-    Console.WriteLine("PASS: scene and project JSON round-trips, scene validation, import, nested folders, duplicate names, self-import guard and all five HTML/BAT exports.");
+    Console.WriteLine("PASS: scene and project JSON round-trips, scene validation, import, nested folders, duplicate names, self-import guard and all ten HTML/BAT exports.");
     return 0;
 }
 catch (Exception ex)
