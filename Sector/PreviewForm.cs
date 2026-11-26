@@ -55,6 +55,7 @@ public sealed class PreviewForm : Form
         };
         bottom.Controls.Add(MakeButton("Повторить анимацию", () => _canvas.ResetAnimation(), false));
         bottom.Controls.Add(MakeButton("Озвучка бота", SpeakNarration, false));
+        bottom.Controls.Add(MakeButton("Звук 2015", PlayRetroSound, false));
         bottom.Controls.Add(MakeButton("Экспорт HTML + BAT", ExportDemo, true));
         bottom.Controls.Add(MakeButton("Выход", Close, false));
         root.Controls.Add(bottom, 0, 2);
@@ -73,6 +74,12 @@ public sealed class PreviewForm : Form
         button.FlatAppearance.BorderSize = 0;
         button.Click += (_, _) => action();
         return button;
+    }
+
+    private void PlayRetroSound()
+    {
+        try { System.Media.SystemSounds.Asterisk.Play(); }
+        catch (Exception ex) { MessageBox.Show(this, "Звук недоступен: " + ex.Message, "Звуковые эффекты", MessageBoxButtons.OK, MessageBoxIcon.Information); }
     }
 
     private void SpeakNarration()
@@ -152,7 +159,9 @@ internal sealed class SimulationCanvas : Panel
             case SimulationStyle.RedTerminal: DrawRedTerminal(g); break;
             case SimulationStyle.Messenger: DrawMessenger(g); break;
             case SimulationStyle.AmberPanel: DrawAmber(g); break;
-            case SimulationStyle.GreenMatrix: DrawRetroVariant(g, Color.FromArgb(5, 20, 12), Color.FromArgb(66, 230, 125), "GREEN PROTOCOL", "LOCAL SESSION / 2016"); break;
+            case SimulationStyle.PirateWindows: DrawPiratedWindows(g); break;
+            case SimulationStyle.AndroidRetro: DrawAndroidRetro(g); break;
+            case SimulationStyle.AsciiSilhouette: DrawAsciiSilhouette(g); break;
             case SimulationStyle.VioletGlitch: DrawRetroVariant(g, Color.FromArgb(23, 12, 38), Color.FromArgb(194, 133, 255), "VIOLET GLITCH", "VISUAL SIGNAL / 2015"); break;
             case SimulationStyle.GreyDialog: DrawRetroVariant(g, Color.FromArgb(39, 43, 49), Color.FromArgb(194, 202, 210), "CLASSIC DIALOG", "WINDOW MOCKUP / 2014"); break;
             case SimulationStyle.PixelAlert: DrawRetroVariant(g, Color.FromArgb(34, 8, 12), Color.FromArgb(255, 104, 86), "PIXEL ALERT", "8-BIT VISUAL SCENE"); break;
@@ -192,6 +201,54 @@ internal sealed class SimulationCanvas : Panel
             g.FillRectangle(accentBrush, 44, y + i * 31, width, 8);
         }
         g.DrawString("ESC — ВЫХОД", mono, accentBrush, 44, Height - 70);
+    }
+    private void DrawPiratedWindows(Graphics g) {
+        g.Clear(Color.FromArgb(0, 73, 135));
+        using var panel = new SolidBrush(Color.FromArgb(238, 22, 38, 58));
+        using var blue = new SolidBrush(Color.FromArgb(35, 126, 204));
+        using var white = new SolidBrush(Color.White);
+        using var muted = new SolidBrush(Color.FromArgb(190, 215, 232));
+        using var mono = new Font("Consolas", 12f);
+        using var title = new Font("Segoe UI Light", 35f);
+        var box = new Rectangle(Width/8, Height/7, Width*3/4, Height*5/7);
+        g.FillRectangle(panel, box); g.FillRectangle(blue, box.X, box.Y, box.Width, 6);
+        g.DrawString("WINDOWS / ACTIVATION CENTER", mono, muted, box.X+34, box.Y+28);
+        g.DrawString("Windows не активирована", title, white, box.X+34, box.Y+92);
+        g.DrawString("ПИРАТСКАЯ ВИЗУАЛЬНАЯ ИМИТАЦИЯ · 2015", mono, muted, box.X+36, box.Y+158);
+        string[] glyphs={"0 0 1 0  / / /  # # #","## / 0101 / ##","0x00 # 0 / 1 #","//// 0000 ####"};
+        for(int i=0;i<glyphs.Length;i++) g.DrawString(glyphs[i],mono,blue,box.X+38,box.Y+220+i*32);
+        g.DrawString("Это не настоящее уведомление Windows",mono,white,box.X+36,box.Bottom-58);
+        g.DrawString("ESC — ВЫХОД",mono,muted,box.X+36,box.Bottom-30);
+    }
+
+    private void DrawAndroidRetro(Graphics g) {
+        g.Clear(Color.FromArgb(31,39,43));
+        var phone=new Rectangle(Width/2-190,Math.Max(20,Height/2-310),380,620);
+        using var frame=new SolidBrush(Color.FromArgb(12,15,17));
+        using var screen=new SolidBrush(Color.FromArgb(238,245,245));
+        using var green=new SolidBrush(Color.FromArgb(91,157,94));
+        using var dark=new SolidBrush(Color.FromArgb(43,53,57));
+        using var ink=new SolidBrush(Color.FromArgb(45,54,58));
+        g.FillRectangle(frame,phone); var inner=new Rectangle(phone.X+12,phone.Y+18,phone.Width-24,phone.Height-36);
+        g.FillRectangle(screen,inner); g.FillRectangle(dark,inner.X,inner.Y,inner.Width,26);
+        using var statusFont=new Font("Segoe UI",9f); using var titleFont=new Font("Segoe UI",19f); using var bodyFont=new Font("Segoe UI",12f);
+        using var dialogFont=new Font("Segoe UI Semibold",16f); using var buttonFont=new Font("Segoe UI Semibold",10f);
+        g.DrawString("16:04   SIGNAL   82%",statusFont,Brushes.White,inner.X+12,inner.Y+5);
+        g.FillRectangle(green,inner.X,inner.Y+26,inner.Width,54); g.DrawString("Android",titleFont,Brushes.White,inner.X+18,inner.Y+37);
+        g.DrawString("Системное сообщение",dialogFont,ink,inner.X+20,inner.Y+112);
+        g.DrawString("Старая мобильная оболочка\nAndroid 4.x / 5.x\n\nЛокальная демонстрация интерфейса.",bodyFont,ink,new RectangleF(inner.X+20,inner.Y+160,inner.Width-40,140));
+        g.FillRectangle(green,inner.X+20,inner.Bottom-66,inner.Width-40,38);
+        g.DrawString("ПОНЯТНО",buttonFont,Brushes.White,inner.X+inner.Width/2-32,inner.Bottom-55);
+    }
+
+    private void DrawAsciiSilhouette(Graphics g) {
+        g.Clear(Color.FromArgb(5,7,10)); using var mono=new Font("Consolas",14f,FontStyle.Bold); using var small=new Font("Consolas",10f);
+        using var glow=new SolidBrush(Color.FromArgb(224,111,91)); using var pale=new SolidBrush(Color.FromArgb(190,205,214));
+        string[] art={"                 ####                 ","               ##0000##               ","              #00000000#              ","             /0000000000\\             ","             #00  00  00#              ","              #00000000#               ","               /######\\                ","             ###/####\\###              ","            ##  /####\\  ##             ","               /  ##  \\                 ","              /   ##   \\                ","             /    ##    \\               ","                  ##                    ","                 ####                   "};
+        var x=Math.Max(20,(Width-520)/2); var y=Math.Max(40,(Height-360)/2);
+        g.DrawString("0 / # — ASCII SHADOW — 2016",small,glow,x,y-42);
+        g.DrawString(string.Join(Environment.NewLine,art),mono,pale,x,y);
+        g.DrawString("LOCAL VISUAL SCENE · ESC TO EXIT",small,glow,x,y+370);
     }
     private void DrawBlue(Graphics g)
     {
