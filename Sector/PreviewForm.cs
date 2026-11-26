@@ -54,6 +54,7 @@ public sealed class PreviewForm : Form
             BackColor = Color.FromArgb(25, 29, 35), Padding = new Padding(18, 7, 18, 4)
         };
         bottom.Controls.Add(MakeButton("Повторить анимацию", () => _canvas.ResetAnimation(), false));
+        bottom.Controls.Add(MakeButton("Озвучка бота", SpeakNarration, false));
         bottom.Controls.Add(MakeButton("Экспорт HTML + BAT", ExportDemo, true));
         bottom.Controls.Add(MakeButton("Выход", Close, false));
         root.Controls.Add(bottom, 0, 2);
@@ -72,6 +73,21 @@ public sealed class PreviewForm : Form
         button.FlatAppearance.BorderSize = 0;
         button.Click += (_, _) => action();
         return button;
+    }
+
+    private void SpeakNarration()
+    {
+        try
+        {
+            var voiceType = Type.GetTypeFromProgID("SAPI.SpVoice");
+            if (voiceType is null) throw new InvalidOperationException("Системный голосовой движок Windows SAPI недоступен.");
+            dynamic voice = Activator.CreateInstance(voiceType)!;
+            voice.Speak(_template.Narration, 1);
+        }
+        catch (Exception ex)
+        {
+            MessageBox.Show(this, "Не удалось запустить озвучку: " + ex.Message, "Озвучка", MessageBoxButtons.OK, MessageBoxIcon.Information);
+        }
     }
 
     private void ExportDemo()
@@ -136,6 +152,11 @@ internal sealed class SimulationCanvas : Panel
             case SimulationStyle.RedTerminal: DrawRedTerminal(g); break;
             case SimulationStyle.Messenger: DrawMessenger(g); break;
             case SimulationStyle.AmberPanel: DrawAmber(g); break;
+            case SimulationStyle.GreenMatrix: DrawRetroVariant(g, Color.FromArgb(5, 20, 12), Color.FromArgb(66, 230, 125), "GREEN PROTOCOL", "LOCAL SESSION / 2016"); break;
+            case SimulationStyle.VioletGlitch: DrawRetroVariant(g, Color.FromArgb(23, 12, 38), Color.FromArgb(194, 133, 255), "VIOLET GLITCH", "VISUAL SIGNAL / 2015"); break;
+            case SimulationStyle.GreyDialog: DrawRetroVariant(g, Color.FromArgb(39, 43, 49), Color.FromArgb(194, 202, 210), "CLASSIC DIALOG", "WINDOW MOCKUP / 2014"); break;
+            case SimulationStyle.PixelAlert: DrawRetroVariant(g, Color.FromArgb(34, 8, 12), Color.FromArgb(255, 104, 86), "PIXEL ALERT", "8-BIT VISUAL SCENE"); break;
+            case SimulationStyle.DarkArchive: DrawRetroVariant(g, Color.FromArgb(7, 17, 27), Color.FromArgb(85, 175, 220), "DARK ARCHIVE", "ARCHIVE SESSION / 2016"); break;
         }
         using (var accentBrush = new SolidBrush(_template.Accent))
             g.FillRectangle(accentBrush, 0, 0, Width, 5);
@@ -149,6 +170,29 @@ internal sealed class SimulationCanvas : Panel
         g.DrawString("СЕКТОР  /  " + _template.Name.ToUpperInvariant() + "  /  " + _template.Mark, font, brush, 22, Height - 30);
     }
 
+    private void DrawRetroVariant(Graphics g, Color background, Color accent, string heading, string subtitle)
+    {
+        g.Clear(background);
+        using var mono = new Font("Consolas", 11f);
+        using var title = new Font("Segoe UI Semibold", 30f);
+        using var body = new Font("Consolas", 13f);
+        using var accentBrush = new SolidBrush(accent);
+        using var soft = new SolidBrush(Color.FromArgb(220, 225, 232));
+        g.DrawString(subtitle, mono, accentBrush, 42, 34);
+        g.DrawString(heading, title, soft, 42, 95);
+        g.DrawString("СИМУЛЯЦИЯ ЗАПУЩЕНА", body, accentBrush, 44, 175);
+        g.DrawString("Локальная сцена · системные функции доступны", mono, soft, 44, 215);
+        g.DrawString("Никаких изменений Windows или пользовательских файлов", mono, soft, 44, 250);
+        var y = 320;
+        for (var i = 0; i < 5; i++)
+        {
+            var width = Math.Max(40, (Width - 100) * ((_phase + i * 19) % 100) / 100);
+            using var track = new SolidBrush(Color.FromArgb(45, accent));
+            g.FillRectangle(track, 44, y + i * 31, Math.Max(80, Width - 100), 8);
+            g.FillRectangle(accentBrush, 44, y + i * 31, width, 8);
+        }
+        g.DrawString("ESC — ВЫХОД", mono, accentBrush, 44, Height - 70);
+    }
     private void DrawBlue(Graphics g)
     {
         g.Clear(Color.FromArgb(0, 91, 166));
