@@ -240,7 +240,14 @@ internal sealed class SimulationCanvas : Panel
         using var small = new Font("Consolas", 9f);
         DrawText(g, "TERMINAL SESSION 04     /     LOCAL DEMO", new Font("Consolas", 10f),
             Color.FromArgb(255, 105, 95), 42, 34);
-        var art = "        /\_/\\\n       ( o.o )\n        > ^ <\n\n     [ SECTOR ]";
+        var art = string.Join(Environment.NewLine, new[]
+        {
+            "        /\\_/\\",
+            "       ( o.o )",
+            "        > ^ <",
+            "",
+            "     [ SECTOR ]"
+        });
         using var artFont = new Font("Consolas", 24f, FontStyle.Bold);
         g.DrawString(art, artFont, red, 46, 104);
         g.DrawString("ВИЗУАЛЬНАЯ СЦЕНА ЗАПУЩЕНА", mono, pale, 46, Height * 2 / 3);
