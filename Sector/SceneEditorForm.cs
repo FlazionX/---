@@ -23,7 +23,8 @@ public sealed class SceneEditorForm : Form
     private readonly string _autosave = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Sector","Autosave","scene-0.4.json");
     private string _selected = "", _bg = "#101820", _color = "#F0A04B", _path = "";
     private float _scale = 1;
-    private bool _loading, _drag, _resize, _dirty;
+    private bool _loading, _drag, _resize, _dirty, _showGrid = true;
+    private float _zoom = 1f;
     private PointF _offset;
 
     public SceneEditorForm()
@@ -46,7 +47,7 @@ public sealed class SceneEditorForm : Form
         Controls.Add(root);
         var bar = new FlowLayoutPanel { Dock=DockStyle.Fill, WrapContents=false, BackColor=Bg, Padding=new Padding(0,5,0,0) };
         AddButton(bar,"Новый",NewScene); AddButton(bar,"Открыть",OpenScene); AddButton(bar,"Сохранить",SaveScene,true);
-        AddButton(bar,"+ Текст",AddText); AddButton(bar,"+ Изображение",AddImage); AddButton(bar,"Отменить",Undo); AddButton(bar,"Повторить",Redo);
+        AddButton(bar,"+ Текст",AddText); AddButton(bar,"+ Изображение",AddImage); AddButton(bar,"Дублировать",DuplicateSelected); AddButton(bar,"По центру",CenterSelected); AddButton(bar,"Сетка",ToggleGrid); AddButton(bar,"−",()=>SetZoom(_zoom-0.1f)); AddButton(bar,"+",()=>SetZoom(_zoom+0.1f)); AddButton(bar,"Отменить",Undo); AddButton(bar,"Повторить",Redo);
         root.Controls.Add(bar,0,0);
 
         var body = new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=3, RowCount=1, BackColor=Bg };
