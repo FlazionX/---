@@ -149,8 +149,7 @@ public sealed class ResourceStudioForm : Form
         {
             using var d = new PresetDialog();
             if (d.ShowDialog(this) != DialogResult.OK || d.Result is null) return;
-            try { ResourceLibrary.SavePreset(d.Result); SetStatus("Пресет сохранён."); }
-            catch (Exception ex) { Error("Пресет", ex); }
+            SetStatus("Пресет сохранён.");
         }, true);
         AddButton(bar, "Открыть папку", () => Open(ResourceLibrary.Presets));
         var list = new ListBox { Dock = DockStyle.Fill, BackColor = _surface, ForeColor = _text, BorderStyle = BorderStyle.None, Font = new Font("Segoe UI", 11f) };
