@@ -20,7 +20,7 @@ public sealed class SceneEditorForm : Form
     private readonly Label _status = new() { Dock = DockStyle.Fill, ForeColor = Muted, TextAlign = ContentAlignment.MiddleLeft };
     private readonly System.Windows.Forms.Timer _timer = new() { Interval = 1500 };
     private readonly Stack<string> _undo = new(), _redo = new();
-    private readonly string _autosave = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Sector","Autosave","scene-0.4.json");
+    private readonly string _autosave = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Sector","Autosave","scene-0.5.json");
     private string _selected = "", _bg = "#101820", _color = "#F0A04B", _path = "";
     private float _scale = 1;
     private bool _loading, _drag, _resize, _dirty, _showGrid = true;
@@ -29,7 +29,7 @@ public sealed class SceneEditorForm : Form
 
     public SceneEditorForm()
     {
-        Text = "Сектор — Scene Editor 0.4.0"; StartPosition = FormStartPosition.CenterParent;
+        Text = "Сектор — Scene Editor 0.5.0"; StartPosition = FormStartPosition.CenterParent;
         Size = new Size(1450,900); MinimumSize = new Size(1100,700); BackColor = Bg; ForeColor = White;
         Font = new Font("Segoe UI",9f); KeyPreview = true;
         BuildUi(); RestoreOrCreate();
@@ -45,7 +45,7 @@ public sealed class SceneEditorForm : Form
         var root = new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=1, RowCount=3, Padding=new Padding(10), BackColor=Bg };
         root.RowStyles.Add(new RowStyle(SizeType.Absolute,48)); root.RowStyles.Add(new RowStyle(SizeType.Percent,100)); root.RowStyles.Add(new RowStyle(SizeType.Absolute,26));
         Controls.Add(root);
-        var bar = new FlowLayoutPanel { Dock=DockStyle.Fill, WrapContents=false, BackColor=Bg, Padding=new Padding(0,5,0,0) };
+        var bar = new FlowLayoutPanel { Dock=DockStyle.Fill, WrapContents=false, AutoScroll=true, BackColor=Bg, Padding=new Padding(0,5,0,0) };
         AddButton(bar,"Новый",NewScene); AddButton(bar,"Открыть",OpenScene); AddButton(bar,"Сохранить",SaveScene,true);
         AddButton(bar,"+ Текст",AddText); AddButton(bar,"+ Изображение",AddImage); AddButton(bar,"Дублировать",DuplicateSelected); AddButton(bar,"По центру",CenterSelected); AddButton(bar,"Сетка",ToggleGrid); AddButton(bar,"−",()=>SetZoom(_zoom-0.1f)); AddButton(bar,"+",()=>SetZoom(_zoom+0.1f)); AddButton(bar,"Отменить",Undo); AddButton(bar,"Повторить",Redo);
         root.Controls.Add(bar,0,0);
