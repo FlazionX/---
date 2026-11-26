@@ -25,6 +25,9 @@ jobs:
       - name: Build
         run: dotnet build Sector/Sector.csproj --configuration Release
 
+      - name: Run file import and export self-tests
+        run: dotnet run --project Sector.SelfTest/Sector.SelfTest.csproj --configuration Release
+
       - name: Publish portable Windows package
         run: dotnet publish Sector/Sector.csproj --configuration Release --runtime win-x64 --self-contained true -p:PublishSingleFile=true --output artifacts/Sector
 
