@@ -15,6 +15,7 @@ public sealed class SceneEditorForm : Form
     private readonly TextBox _name = new() { Text = "Новая сцена" };
     private readonly TextBox _text = new();
     private readonly TextBox _objectName = new();
+    private readonly TextBox _fontFamily = new() { Text = "Segoe UI" };
     private readonly NumericUpDown _x = Num(0,3840), _y = Num(0,2160), _w = Num(8,3840,240), _h = Num(8,2160,60), _font = Num(6,180,28);
     private readonly ComboBox _resolution = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 145 };
     private readonly Label _status = new() { Dock = DockStyle.Fill, ForeColor = Muted, TextAlign = ContentAlignment.MiddleLeft };
@@ -60,7 +61,7 @@ public sealed class SceneEditorForm : Form
         Controls.Add(root);
         var bar = new FlowLayoutPanel { Dock=DockStyle.Fill, WrapContents=false, AutoScroll=true, BackColor=Bg, Padding=new Padding(0,5,0,0) };
         AddButton(bar,"Новый",NewScene); AddButton(bar,"Открыть",OpenScene); AddButton(bar,"Сохранить",SaveScene,true);
-        AddButton(bar,"+ Текст",AddText); AddButton(bar,"+ Изображение",AddImage); AddButton(bar,"Дублировать",DuplicateSelected); AddButton(bar,"По центру",CenterSelected); AddButton(bar,"Сетка",ToggleGrid); AddButton(bar,"−",()=>SetZoom(_zoom-0.1f)); AddButton(bar,"+",()=>SetZoom(_zoom+0.1f)); AddButton(bar,"Отменить",Undo); AddButton(bar,"Повторить",Redo); AddButton(bar,"Запись GIF",ToggleGifRecording); bar.Controls.Add(_fpsLabel);
+        AddButton(bar,"+ Текст",AddText); AddButton(bar,"+ Изображение",AddImage); AddButton(bar,"Дублировать",DuplicateSelected); AddButton(bar,"По центру",CenterSelected); AddButton(bar,"Сетка",ToggleGrid); AddButton(bar,"−",()=>SetZoom(_zoom-0.1f)); AddButton(bar,"+",()=>SetZoom(_zoom+0.1f)); AddButton(bar,"Отменить",Undo); AddButton(bar,"Повторить",Redo); AddButton(bar,"Запись GIF / MP4",ToggleGifRecording); AddButton(bar,"Шрифты",()=>{ResourceLibrary.EnsureFolders();System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe",ResourceLibrary.Fonts){UseShellExecute=true});}); bar.Controls.Add(_fpsLabel);
         root.Controls.Add(bar,0,0);
 
         var body = new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=3, RowCount=1, BackColor=Bg };
@@ -84,13 +85,13 @@ public sealed class SceneEditorForm : Form
         var right=new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=1, RowCount=2, Padding=new Padding(10), BackColor=Surface };
         right.RowStyles.Add(new RowStyle(SizeType.Absolute,30)); right.RowStyles.Add(new RowStyle(SizeType.Percent,100));
         right.Controls.Add(Header("СВОЙСТВА"),0,0);
-        var props=new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=1, RowCount=10, AutoScroll=true, BackColor=Surface };
-        for(int i=0;i<10;i++) props.RowStyles.Add(new RowStyle(SizeType.Absolute,i==2?100:62));
+        var props=new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=1, RowCount=11, AutoScroll=true, BackColor=Surface };
+        for(int i=0;i<11;i++) props.RowStyles.Add(new RowStyle(SizeType.Absolute,i==2?100:62));
         AddField(props,"Название сцены",_name,0); AddField(props,"Имя слоя",_objectName,1); AddField(props,"Текст объекта",_text,2,true);
-        AddField(props,"X",_x,3); AddField(props,"Y",_y,4); AddField(props,"Ширина",_w,5); AddField(props,"Высота",_h,6); AddField(props,"Размер шрифта",_font,7);
+        AddField(props,"X",_x,3); AddField(props,"Y",_y,4); AddField(props,"Ширина",_w,5); AddField(props,"Высота",_h,6); AddField(props,"Размер шрифта",_font,7); AddField(props,"Семейство шрифта",_fontFamily,8);
         var colorPanel=new Panel { Dock=DockStyle.Fill, BackColor=Surface }; colorPanel.Controls.Add(new Label { Text="Цвет текста",Dock=DockStyle.Top,Height=22,ForeColor=Muted });
-        var colorButton=Button("Выбрать цвет",ChooseColor); colorButton.Dock=DockStyle.Bottom; colorPanel.Controls.Add(colorButton); props.Controls.Add(colorPanel,0,8);
-        var apply=Button("Применить свойства",ApplyProperties,true); apply.Dock=DockStyle.Fill; props.Controls.Add(apply,0,9);
+        var colorButton=Button("Выбрать цвет",ChooseColor); colorButton.Dock=DockStyle.Bottom; colorPanel.Controls.Add(colorButton); props.Controls.Add(colorPanel,0,9);
+        var apply=Button("Применить свойства",ApplyProperties,true); apply.Dock=DockStyle.Fill; props.Controls.Add(apply,0,10);
         right.Controls.Add(props,0,1); body.Controls.Add(right,2,0);
         root.Controls.Add(_status,0,2);
         _resolution.SelectedIndex=1; _name.TextChanged += (_,_) => { if(!_loading) _dirty=true; };
@@ -175,7 +176,7 @@ public sealed class SceneEditorForm : Form
     {
         var i=_items.FindIndex(e=>e.Id==_selected);if(i<0){SetStatus("Выберите объект на сцене или в слоях.");return;}
         PushUndo();var e=_items[i];var w=(float)_w.Value;var h=(float)_h.Value;
-        _items[i]=e with{Name=string.IsNullOrWhiteSpace(_objectName.Text)?"Объект":_objectName.Text.Trim(),Text=_text.Text,X=Math.Clamp((float)_x.Value,0,_canvasWidth-w),Y=Math.Clamp((float)_y.Value,0,_canvasHeight-h),Width=w,Height=h,FontSize=(float)_font.Value,ColorHex=_color};
+        _items[i]=e with{Name=string.IsNullOrWhiteSpace(_objectName.Text)?"Объект":_objectName.Text.Trim(),Text=_text.Text,X=Math.Clamp((float)_x.Value,0,_canvasWidth-w),Y=Math.Clamp((float)_y.Value,0,_canvasHeight-h),Width=w,Height=h,FontSize=(float)_font.Value,FontFamily=string.IsNullOrWhiteSpace(_fontFamily.Text)?"Segoe UI":_fontFamily.Text.Trim(),ColorHex=_color};
         Changed();
     }
     private int _canvasWidth=1280,_canvasHeight=720;
@@ -209,7 +210,7 @@ public sealed class SceneEditorForm : Form
         foreach(var item in _items)
         {
             var rect=new RectangleF(item.X,item.Y,item.Width,item.Height);
-            if(item.Type==SceneElementType.Text){using var f=new Font(item.FontFamily,item.FontSize,FontStyle.Regular,GraphicsUnit.Pixel);using var b=new SolidBrush(ColorTranslator.FromHtml(item.ColorHex));g.DrawString(item.Text,f,b,rect);}
+            if(item.Type==SceneElementType.Text){using var f=FontLibrary.CreateFont(item.FontFamily,item.FontSize,FontStyle.Regular);using var b=new SolidBrush(ColorTranslator.FromHtml(item.ColorHex));g.DrawString(item.Text,f,b,rect);}
             else if(item.ImageBase64!=null){try{using var ms=new MemoryStream(Convert.FromBase64String(item.ImageBase64));using var im=Image.FromStream(ms);g.DrawImage(im,rect);}catch{}}
             if(item.Id==_selected){using var p=new Pen(Orange,2/_scale){DashStyle=DashStyle.Dash};g.DrawRectangle(p,item.X,item.Y,item.Width,item.Height);using var b=new SolidBrush(Orange);g.FillRectangle(b,item.X+item.Width-8/_scale,item.Y+item.Height-8/_scale,8/_scale,8/_scale);}
         }
@@ -242,7 +243,7 @@ public sealed class SceneEditorForm : Form
         if (_recordTimer.Enabled)
         {
             _recordTimer.Stop();
-            SaveGifRecording();
+            SaveRecording();
             return;
         }
         foreach (var frame in _recordFrames) frame.Dispose();
@@ -264,13 +265,14 @@ public sealed class SceneEditorForm : Form
         catch (Exception ex) { _recordTimer.Stop(); SetStatus("Ошибка записи GIF: " + ex.Message); }
     }
 
-    private void SaveGifRecording()
+    private void SaveRecording()
     {
         if (_recordFrames.Count < 2) { SetStatus("Для GIF нужно минимум два кадра."); foreach (var f in _recordFrames) f.Dispose(); _recordFrames.Clear(); return; }
-        using var dialog = new SaveFileDialog { Filter = "Анимированный GIF (*.gif)|*.gif", FileName = "Sector-scene.gif" };
+        using var dialog = new SaveFileDialog { Filter = "Анимированный GIF (*.gif)|*.gif|Видео MP4 (*.mp4)|*.mp4", FileName = "Sector-scene.gif", AddExtension = true };
         if (dialog.ShowDialog(this) != DialogResult.OK) { foreach (var f in _recordFrames) f.Dispose(); _recordFrames.Clear(); return; }
         try
         {
+            if (dialog.FilterIndex == 2 || Path.GetExtension(dialog.FileName).Equals(".mp4", StringComparison.OrdinalIgnoreCase)) { SaveMp4(dialog.FileName); return; }
             var encoder = System.Drawing.Imaging.ImageCodecInfo.GetImageEncoders().First(x => x.MimeType == "image/gif");
             using var parameters = new System.Drawing.Imaging.EncoderParameters(1);
             parameters.Param[0] = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.SaveFlag, (long)System.Drawing.Imaging.EncoderValue.MultiFrame);
@@ -283,6 +285,36 @@ public sealed class SceneEditorForm : Form
         }
         catch (Exception ex) { Error("Экспорт GIF", ex); }
         finally { foreach (var f in _recordFrames) f.Dispose(); _recordFrames.Clear(); }
+    }
+
+
+    private void SaveMp4(string outputPath)
+    {
+        var temp = Path.Combine(Path.GetTempPath(), "SectorFrames-" + Guid.NewGuid().ToString("N"));
+        Directory.CreateDirectory(temp);
+        try
+        {
+            for (var i = 0; i < _recordFrames.Count; i++)
+                _recordFrames[i].Save(Path.Combine(temp, $"frame-{i:0000}.png"), System.Drawing.Imaging.ImageFormat.Png);
+            var start = new System.Diagnostics.ProcessStartInfo("ffmpeg")
+            {
+                UseShellExecute = false, CreateNoWindow = true, RedirectStandardError = true, RedirectStandardOutput = true
+            };
+            start.ArgumentList.Add("-y"); start.ArgumentList.Add("-framerate"); start.ArgumentList.Add("10");
+            start.ArgumentList.Add("-i"); start.ArgumentList.Add(Path.Combine(temp, "frame-%04d.png"));
+            start.ArgumentList.Add("-c:v"); start.ArgumentList.Add("libx264"); start.ArgumentList.Add("-pix_fmt"); start.ArgumentList.Add("yuv420p");
+            start.ArgumentList.Add(outputPath);
+            using var process = System.Diagnostics.Process.Start(start) ?? throw new InvalidOperationException("Не удалось запустить FFmpeg.");
+            var error = process.StandardError.ReadToEnd();
+            process.WaitForExit();
+            if (process.ExitCode != 0) throw new InvalidOperationException("FFmpeg завершился с ошибкой: " + error);
+            SetStatus("MP4 экспортирован: " + Path.GetFileName(outputPath));
+        }
+        catch (System.ComponentModel.Win32Exception)
+        {
+            throw new InvalidOperationException("Для MP4 нужен FFmpeg в PATH. GIF можно экспортировать без дополнительных программ.");
+        }
+        finally { try { Directory.Delete(temp, true); } catch { } }
     }
 
     private void Autosave(){if(!_dirty)return;try{SceneProjectService.Save(Project(),_autosave);_dirty=false;SetStatus("Автосохранено "+DateTime.Now.ToString("HH:mm:ss"));}catch(Exception ex){SetStatus("Ошибка автосохранения: "+ex.Message);}}
