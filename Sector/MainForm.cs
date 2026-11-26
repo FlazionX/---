@@ -122,7 +122,12 @@ public sealed class MainForm : Form
     private void SetPage(Control page)
     {
         _content.SuspendLayout();
-        _content.Controls.Clear();
+        while (_content.Controls.Count > 0)
+        {
+            var oldPage = _content.Controls[0];
+            _content.Controls.RemoveAt(0);
+            oldPage.Dispose();
+        }
         page.Dock = DockStyle.Fill;
         _content.Controls.Add(page);
         _content.ResumeLayout();
