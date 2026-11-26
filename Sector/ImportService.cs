@@ -42,8 +42,7 @@ public static class ImportService
         if (!Directory.Exists(source)) throw new DirectoryNotFoundException("Выбранная папка не найдена.");
         Directory.CreateDirectory(destination);
 
-        var root = Path.GetFullPath(source);
-        var imported = new List<string>();
+        var root = Path.GetFullPath(source);\n        var destinationFull = Path.GetFullPath(destination);\n        var relativeDestination = Path.GetRelativePath(root, destinationFull);\n        if (relativeDestination == "." || (!Path.IsPathRooted(relativeDestination) && relativeDestination != ".." && !relativeDestination.StartsWith(".." + Path.DirectorySeparatorChar, StringComparison.Ordinal)))\n            throw new InvalidOperationException("Нельзя импортировать папку Сектора саму в себя или в её собственную подпапку.");\n\n        var imported = new List<string>();
         var skipped = 0;
         long totalBytes = 0;
         var pending = new Stack<string>();
