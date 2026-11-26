@@ -5,12 +5,12 @@ namespace Sector;
 
 public sealed class SceneEditorForm : Form
 {
-    private static readonly Color Bg = Color.FromArgb(20,23,28), Surface = Color.FromArgb(29,34,41),
-        Surface2 = Color.FromArgb(37,43,51), Orange = Color.FromArgb(235,133,43), White = Color.FromArgb(235,238,242),
-        Muted = Color.FromArgb(151,161,174);
+    private static readonly Color Bg = Color.FromArgb(243,243,243), Surface = Color.FromArgb(255,255,255),
+        Surface2 = Color.FromArgb(232,232,232), Orange = Color.FromArgb(0,120,215), White = Color.FromArgb(32,32,32),
+        Muted = Color.FromArgb(96,96,96);
     private readonly List<SceneElement> _items = new();
-    private readonly Panel _canvas = new() { BackColor = Color.FromArgb(12,14,18) };
-    private readonly Panel _host = new() { Dock = DockStyle.Fill, AutoScroll = true, BackColor = Color.FromArgb(12,14,18) };
+    private readonly Panel _canvas = new() { BackColor = Color.FromArgb(225,225,225) };
+    private readonly Panel _host = new() { Dock = DockStyle.Fill, AutoScroll = true, BackColor = Color.FromArgb(225,225,225) };
     private readonly ListBox _layers = new() { Dock = DockStyle.Fill, BackColor = Surface2, ForeColor = White, BorderStyle = BorderStyle.None };
     private readonly TextBox _name = new() { Text = "Новая сцена" };
     private readonly TextBox _text = new();
@@ -25,10 +25,10 @@ public sealed class SceneEditorForm : Form
     private readonly System.Diagnostics.Stopwatch _fpsWatch = new();
     private int _paintCount;
     private SectorEffectPack? _activeEffectPack;
-    private readonly Label _fpsLabel = new() { AutoSize = true, ForeColor = Color.FromArgb(151,161,174), Padding = new Padding(8,7,8,0), Text = "FPS: --" };
+    private readonly Label _fpsLabel = new() { AutoSize = true, ForeColor = Color.FromArgb(96,96,96), Padding = new Padding(8,7,8,0), Text = "FPS: --" };
     private readonly Stack<string> _undo = new(), _redo = new();
     private readonly string _autosave = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Sector","Autosave","scene-0.7.json");
-    private string _selected = "", _bg = "#101820", _color = "#F0A04B", _path = "";
+    private string _selected = "", _bg = "#FFFFFF", _color = "#0078D7", _path = "";
     private float _scale = 1;
     private bool _loading, _drag, _resize, _dirty, _showGrid = true;
     private float _zoom = 1f;
@@ -122,8 +122,8 @@ public sealed class SceneEditorForm : Form
     }
     private void CreateDefault()
     {
-        _items.Clear();_items.Add(new SceneElement(Guid.NewGuid().ToString("N"),"Заголовок",SceneElementType.Text,80,80,560,100,"Новая сцена","Segoe UI",44,"#F0A04B"));
-        _name.Text="Новая сцена";_bg="#101820";_selected=_items[0].Id;_undo.Clear();_redo.Clear();_dirty=false;RefreshLayers();SelectCurrent();FitCanvas();
+        _items.Clear();_items.Add(new SceneElement(Guid.NewGuid().ToString("N"),"Заголовок",SceneElementType.Text,80,80,560,100,"Новая сцена","Segoe UI",44,"#0078D7"));
+        _name.Text="Новая сцена";_bg="#FFFFFF";_selected=_items[0].Id;_undo.Clear();_redo.Clear();_dirty=false;RefreshLayers();SelectCurrent();FitCanvas();
     }
     private void AddText()
     {
