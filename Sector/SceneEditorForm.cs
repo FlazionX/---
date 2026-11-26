@@ -290,7 +290,7 @@ public sealed class SceneEditorForm : Form
 
     private void CaptureGifFrame()
     {
-        if (_recordFrames.Count >= 120) { _recordTimer.Stop(); SaveGifRecording(); return; }
+        if (_recordFrames.Count >= 120) { _recordTimer.Stop(); SaveRecording(); return; }
         try
         {
             var frame = new Bitmap(Math.Max(1, _canvas.Width), Math.Max(1, _canvas.Height));
