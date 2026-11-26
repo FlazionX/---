@@ -47,6 +47,12 @@ public static class DemoExporter
             SimulationStyle.SnowCat => "<div class='tag'>WINTER COLLECTION / LOCAL DEMO</div><h1>Снежный архив</h1><p>Все демонстрационные материалы готовы к просмотру.</p><div class='cat'> /\\_/\\<br>( o.o )<br> &gt; ^ &lt;</div><small>LOCAL PREVIEW · NO SYSTEM CHANGES</small>",
             SimulationStyle.RedTerminal => "<small>TERMINAL SESSION 04 / LOCAL DEMO</small><pre>        /\\_/\\\n       ( o.o )\n        &gt; ^ &lt;\n\n     [ SECTOR ]</pre><h2>Визуальная сцена запущена</h2><small>Файловая система не изменяется · STATUS: SAFE</small>",
             SimulationStyle.Messenger => "<div class='tag'>MESSAGES / 2015</div><h1>Локальный чат</h1><div class='bubble'>можно посмотреть файл?</div><div class='bubble right'>да, это только демо</div><div class='file'>▣ &nbsp; risovat-demo.bat<br><small>Безопасный HTML-запускатель</small></div><small>ФАЙЛ НЕ ВЫПОЛНЯЕТСЯ ВНУТРИ СЕКТОРА</small>",
+
+            SimulationStyle.GreenMatrix => "<div class='tag'>GREEN PROTOCOL / 2016</div><h1>Локальный терминал</h1><pre>SESSION READY\nFILESYSTEM: UNCHANGED\nINPUT: AVAILABLE</pre>",
+            SimulationStyle.VioletGlitch => "<div class='tag'>VIOLET GLITCH / 2015</div><h1>Визуальный сигнал</h1><p>Анимированная ретро-сцена с фиолетовыми акцентами.</p>",
+            SimulationStyle.GreyDialog => "<div class='tag'>CLASSIC DIALOG / 2014</div><h1>Системный диалог</h1><p>Макет классического окна. Это не настоящее системное сообщение.</p>",
+            SimulationStyle.PixelAlert => "<div class='tag'>PIXEL ALERT / 2014</div><h1>8-BIT VISUAL</h1><pre>+------------------+\n|  DEMO ONLY       |\n+------------------+</pre>",
+            SimulationStyle.DarkArchive => "<div class='tag'>DARK ARCHIVE / 2016</div><h1>Архив загружен</h1><p>Локальная демонстрация завершена успешно.</p>",
             _ => "<div class='tag'>CLASSIC WINDOW</div><h1>Демонстрационная панель</h1><p>Сценарий готов к просмотру. Это макет интерфейса, а не системное окно.</p><div class='progress'><i></i></div><small>LOCAL PREVIEW · SAFE</small>"
         };
 
