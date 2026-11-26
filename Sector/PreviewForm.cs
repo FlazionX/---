@@ -189,8 +189,7 @@ internal sealed class SimulationCanvas : Panel
             Color.FromArgb(105, 207, 218), left.X + 32, left.Y + 30);
         DrawText(g, "СНЕЖНЫЙ АРХИВ", new Font("Georgia", 27f),
             Color.FromArgb(238, 246, 249), left.X + 30, left.Y + 82);
-        DrawText(g, "Все демонстрационные материалы
-готовы к просмотру.", new Font("Segoe UI", 13f),
+        DrawText(g, "Все демонстрационные материалы\\nготовы к просмотру.", new Font("Segoe UI", 13f),
             Color.FromArgb(177, 199, 207), left.X + 32, left.Y + 142);
         DrawText(g, "LOCAL PREVIEW   ·   NO SYSTEM CHANGES", new Font("Consolas", 9f),
             Color.FromArgb(111, 157, 169), left.X + 32, left.Bottom - 74);
