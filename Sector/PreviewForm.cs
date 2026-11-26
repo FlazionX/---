@@ -84,7 +84,9 @@ public sealed class PreviewForm : Form
             MessageBox.Show(this,
                 $"Демо-пакет сохранён:\n{output}\n\nЗапуск BAT-файла только откроет HTML-макет в браузере. Никаких системных настроек он не меняет.",
                 "Экспорт завершён", MessageBoxButtons.OK, MessageBoxIcon.Information);
-            Process.Start(new ProcessStartInfo("explorer.exe", output) { UseShellExecute = true });
+            var start = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };
+            start.ArgumentList.Add(output);
+            Process.Start(start);
         }
         catch (Exception ex)
         {
