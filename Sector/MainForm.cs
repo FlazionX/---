@@ -334,19 +334,65 @@ public sealed class MainForm : Form
 
     private void ShowSettings()
     {
+        var preferences = SectorPreferences.Load();
         var page = CreatePageLayout();
-        page.Controls.Add(CreatePageHeader("Настройки", "Локальные каталоги и сведения о сборке."), 0, 0);
+        page.Controls.Add(CreatePageHeader("Настройки", "Параметры редактора и поведения Сектора. Изменения сохраняются локально."), 0, 0);
         var actions = CreateActionBar();
-        actions.Controls.Add(MakeButton("Открыть данные Сектора", OpenDataFolder, true));
+        actions.Controls.Add(MakeButton("Открыть данные Сектора", OpenDataFolder));
         actions.Controls.Add(MakeButton("Очистить историю", ClearHistory));
         page.Controls.Add(actions, 0, 1);
-        var info = new Label
+
+        var panel = new TableLayoutPanel { Dock = DockStyle.Top, AutoSize = true, ColumnCount = 2, Padding = new Padding(18), BackColor = Surface };
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 42));
+        panel.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 58));
+        void AddRow(string title, Control control, string hint)
         {
-            Dock = DockStyle.Fill, ForeColor = Muted, Font = new Font("Segoe UI", 10f),
-            Text = "Версия: 0.4.0\nПлатформа: Windows / .NET 8 WinForms\n\nКаталог данных:\n" + _dataRoot +
-                   "\n\nИмпортируемые скрипты хранятся как обычные файлы и не запускаются приложением."
-        };
-        page.Controls.Add(info, 0, 2);
+            var label = new Label { Text = title + Environment.NewLine + hint, Dock = DockStyle.Fill, ForeColor = Muted, Height = 58, TextAlign = ContentAlignment.MiddleLeft };
+            control.Dock = DockStyle.Fill;
+            control.Margin = new Padding(4, 12, 4, 12);
+            panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 66));
+            panel.Controls.Add(label, 0, panel.RowCount);
+            panel.Controls.Add(control, 1, panel.RowCount);
+            panel.RowCount++;
+        }
+
+        var autosave = new NumericUpDown { Minimum = 1, Maximum = 30, Value = Math.Clamp(preferences.AutosaveSeconds, 1, 30), BackColor = Surface2, ForeColor = MainText };
+        AddRow("Автосохранение редактора", autosave, "Интервал в секундах");
+        var resolution = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList, BackColor = Surface2, ForeColor = MainText };
+        resolution.Items.AddRange(["800 × 600", "1280 × 720", "1366 × 768", "1920 × 1080"]);
+        resolution.SelectedItem = resolution.Items.Contains(preferences.DefaultResolution) ? preferences.DefaultResolution : "1280 × 720";
+        AddRow("Разрешение новой сцены", resolution, "Размер холста по умолчанию");
+        var grid = new CheckBox { Text = "Показывать сетку", Checked = preferences.ShowGridByDefault, ForeColor = MainText, BackColor = Surface };
+        AddRow("Рабочая сетка", grid, "Сетка помогает выравнивать объекты");
+        var confirm = new CheckBox { Text = "Спрашивать перед очисткой", Checked = preferences.ConfirmBeforeClearingHistory, ForeColor = MainText, BackColor = Surface };
+        AddRow("История", confirm, "Защита от случайного удаления");
+
+        var save = MakeButton("Сохранить настройки", () =>
+        {
+            preferences.AutosaveSeconds = (int)autosave.Value;
+            preferences.DefaultResolution = resolution.SelectedItem?.ToString() ?? "1280 × 720";
+            preferences.ShowGridByDefault = grid.Checked;
+            preferences.ConfirmBeforeClearingHistory = confirm.Checked;
+            try { preferences.Save(); SetStatus("Настройки сохранены. Новые параметры редактора применятся при следующем запуске."); }
+            catch (Exception ex) { MessageBox.Show(this, "Не удалось сохранить настройки: " + ex.Message, "Сектор", MessageBoxButtons.OK, MessageBoxIcon.Warning); }
+        }, true);
+        save.Margin = new Padding(0, 12, 0, 0);
+        panel.RowStyles.Add(new RowStyle(SizeType.Absolute, 54));
+        panel.Controls.Add(save, 1, panel.RowCount);
+        panel.SetColumnSpan(save, 1);
+        panel.RowCount++;
+
+        var info = new Label { Dock = DockStyle.Fill, ForeColor = Muted, TextAlign = ContentAlignment.BottomLeft,
+            Text = "Сектор 0.7.0 · Windows / .NET 8 WinForms" + Environment.NewLine +
+                   "Настройки хранятся в LocalAppData\\Sector\\settings.json." };
+        var stack = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 2, BackColor = Bg };
+        stack.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
+        stack.RowStyles.Add(new RowStyle(SizeType.Absolute, 58));
+        var scroll = new Panel { Dock = DockStyle.Fill, AutoScroll = true };
+        scroll.Controls.Add(panel);
+        stack.Controls.Add(scroll, 0, 0);
+        stack.Controls.Add(info, 0, 1);
+        page.Controls.Add(stack, 0, 2);
         SetPage(page);
     }
 
