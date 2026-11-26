@@ -190,7 +190,7 @@ public sealed class ResourceStudioForm : Form
         foreach (var f in Directory.EnumerateFiles(ResourceLibrary.Fonts).Where(x => Path.GetExtension(x).Equals(".ttf", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(x).Equals(".otf", StringComparison.OrdinalIgnoreCase)))
             list.Items.Add(Path.GetFileName(f));
         tab.Controls.Add(list); tab.Controls.SetChildIndex(list, 0);
-        var hint = new Label { Dock = DockStyle.Bottom, Height = 46, ForeColor = Color.Silver, Text = "Шрифты хранятся внутри каталога Сектора и не устанавливаются в Windows автоматически." };
+        var hint = new Label { Dock = DockStyle.Bottom, Height = 46, ForeColor = Color.FromArgb(96, 96, 96), Text = "Шрифты хранятся внутри каталога Сектора и не устанавливаются в Windows автоматически." };
         tab.Controls.Add(hint);
     }
 
@@ -210,7 +210,7 @@ public sealed class ResourceStudioForm : Form
         foreach (var p in ResourceLibrary.LoadAll<SectorEffectPack>(ResourceLibrary.Plugins, "*.sector-effect.json"))
             list.Items.Add($"{p.Name} · {p.Effect} · {p.Color} · {p.Intensity}%");
         tab.Controls.Add(list); tab.Controls.SetChildIndex(list, 0);
-        var hint = new Label { Dock = DockStyle.Bottom, Height = 54, ForeColor = Color.Silver, Text = "Пакеты эффектов — безопасные JSON-описания (scanlines, glitch, vignette, noise). Они не исполняют DLL или BAT-код." };
+        var hint = new Label { Dock = DockStyle.Bottom, Height = 54, ForeColor = Color.FromArgb(96, 96, 96), Text = "Пакеты эффектов — безопасные JSON-описания (scanlines, glitch, vignette, noise). Они не исполняют DLL или BAT-код." };
         tab.Controls.Add(hint);
     }
 
@@ -270,7 +270,7 @@ public sealed class PresetDialog : Form
     private readonly NumericUpDown _size = new() { Minimum = 6, Maximum = 180, Value = 24 };
     public PresetDialog()
     {
-        Text = "Новый пресет"; Size = new Size(440,430); StartPosition = FormStartPosition.CenterParent; BackColor = Color.FromArgb(243,243,243); ForeColor = Color.White;
+        Text = "Новый пресет"; Size = new Size(440,430); StartPosition = FormStartPosition.CenterParent; BackColor = Color.FromArgb(243,243,243); ForeColor = Color.FromArgb(32, 32, 32);
         var panel = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(16), ColumnCount = 2, RowCount = 8 };
         Controls.Add(panel);
         Add("Название", _name); Add("Описание", _description); Add("Фон (#RRGGBB)", _bg); Add("Текст (#RRGGBB)", _fg); Add("Акцент (#RRGGBB)", _accent); Add("Шрифт", _font); Add("Размер", _size);
@@ -280,7 +280,7 @@ public sealed class PresetDialog : Form
     }
     private void Add(string label, Control control)
     {
-        var row = panelRow++; var l = new Label { Text = label, Dock = DockStyle.Fill, ForeColor = Color.Silver, TextAlign = ContentAlignment.MiddleLeft };
+        var row = panelRow++; var l = new Label { Text = label, Dock = DockStyle.Fill, ForeColor = Color.FromArgb(96, 96, 96), TextAlign = ContentAlignment.MiddleLeft };
         control.Dock = DockStyle.Fill; panel.Controls.Add(l,0,row); panel.Controls.Add(control,1,row);
     }
     private int panelRow;
@@ -292,12 +292,12 @@ public sealed class EffectDialog : Form
     public SectorEffectPack? Result { get; private set; }
     public EffectDialog()
     {
-        Text = "Новый пакет эффектов"; Size = new Size(420,280); StartPosition = FormStartPosition.CenterParent; BackColor = Color.FromArgb(243,243,243); ForeColor = Color.White;
+        Text = "Новый пакет эффектов"; Size = new Size(420,280); StartPosition = FormStartPosition.CenterParent; BackColor = Color.FromArgb(243,243,243); ForeColor = Color.FromArgb(32, 32, 32);
         var name = new TextBox { Text = "My Effect" }; var effect = new ComboBox { DropDownStyle = ComboBoxStyle.DropDownList };
         effect.Items.AddRange(["scanlines","glitch","vignette","noise"]); effect.SelectedIndex = 0;
         var color = new TextBox { Text = "#0078D7" }; var intensity = new NumericUpDown { Minimum = 0, Maximum = 100, Value = 50 };
         var grid = new TableLayoutPanel { Dock = DockStyle.Fill, Padding = new Padding(14), ColumnCount = 2, RowCount = 5 }; Controls.Add(grid);
-        void Add(string label, Control control, int row) { grid.Controls.Add(new Label { Text = label, Dock = DockStyle.Fill, ForeColor = Color.Silver, TextAlign = ContentAlignment.MiddleLeft },0,row); control.Dock = DockStyle.Fill; grid.Controls.Add(control,1,row); }
+        void Add(string label, Control control, int row) { grid.Controls.Add(new Label { Text = label, Dock = DockStyle.Fill, ForeColor = Color.FromArgb(96, 96, 96), TextAlign = ContentAlignment.MiddleLeft },0,row); control.Dock = DockStyle.Fill; grid.Controls.Add(control,1,row); }
         Add("Название",name,0); Add("Эффект",effect,1); Add("Цвет",color,2); Add("Интенсивность",intensity,3);
         var save = new Button { Text = "Сохранить", Dock = DockStyle.Fill, BackColor = Color.FromArgb(0,120,215) };
         save.Click += (_,_) => { Result = new SectorEffectPack(name.Text,effect.Text,color.Text,(int)intensity.Value); try { ResourceLibrary.SaveEffectPack(Result); DialogResult=DialogResult.OK; Close(); } catch(Exception ex){MessageBox.Show(this,ex.Message);} };
