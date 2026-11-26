@@ -100,7 +100,7 @@ public sealed class SceneEditorForm : Form
 
     private void RestoreOrCreate()
     {
-        try{if(File.Exists(_autosave)&&MessageBox.Show(this,"Найдено автосохранение. Восстановить сцену?","Сектор",MessageBoxButtons.YesNo)==DialogResult.Yes){Load(SceneProjectService.Load(_autosave));SetStatus("Автосохранение восстановлено.");return;}}
+        try{if(File.Exists(_autosave)&&MessageBox.Show(this,"Найдено автосохранение. Восстановить сцену?","Сектор",MessageBoxButtons.YesNo)==DialogResult.Yes){LoadProjectState(SceneProjectService.Load(_autosave));SetStatus("Автосохранение восстановлено.");return;}}
         catch(Exception ex){SetStatus("Не удалось восстановить автосохранение: "+ex.Message);}
         CreateDefault();
     }
@@ -150,7 +150,7 @@ public sealed class SceneEditorForm : Form
         if(_loading)return;var size=_resolution.SelectedIndex switch{0=>(800,600),1=>(1280,720),2=>(1366,768),3=>(1920,1080),_=>(_canvasWidth,_canvasHeight)};
         if(_resolution.SelectedIndex==4){using var d=new ResolutionDialog(_canvasWidth,_canvasHeight);if(d.ShowDialog(this)!=DialogResult.OK)return;size=(d.CanvasWidth,d.CanvasHeight);}
         PushUndo();_canvasWidth=size.Item1;_canvasHeight=size.Item2;
-        _items=_items.Select(e=>e with{X=Math.Clamp(e.X,0,Math.Max(0,_canvasWidth-e.Width)),Y=Math.Clamp(e.Y,0,Math.Max(0,_canvasHeight-e.Height)),Width=Math.Min(e.Width,_canvasWidth),Height=Math.Min(e.Height,_canvasHeight)}).ToList();
+        var adjusted=_items.Select(e=>e with{X=Math.Clamp(e.X,0,Math.Max(0,_canvasWidth-e.Width)),Y=Math.Clamp(e.Y,0,Math.Max(0,_canvasHeight-e.Height)),Width=Math.Min(e.Width,_canvasWidth),Height=Math.Min(e.Height,_canvasHeight)}).ToList(); _items.Clear(); _items.AddRange(adjusted);
         Changed();
     }
     private void FitCanvas()
@@ -188,14 +188,14 @@ public sealed class SceneEditorForm : Form
     private SceneProject Project()=>new(1,_name.Text,_canvasWidth,_canvasHeight,_bg,_items.ToList());
     private string Snapshot()=>JsonSerializer.Serialize(Project());
     private void PushUndo(){_undo.Push(Snapshot());if(_undo.Count>80){var a=_undo.Reverse().Take(80).ToArray();_undo.Clear();foreach(var s in a)_undo.Push(s);}_redo.Clear();}
-    private void Undo(){if(_undo.Count==0)return;_redo.Push(Snapshot());Load(JsonSerializer.Deserialize<SceneProject>(_undo.Pop())!);_dirty=true;}
-    private void Redo(){if(_redo.Count==0)return;_undo.Push(Snapshot());Load(JsonSerializer.Deserialize<SceneProject>(_redo.Pop())!);_dirty=true;}
+    private void Undo(){if(_undo.Count==0)return;_redo.Push(Snapshot());LoadProjectState(JsonSerializer.Deserialize<SceneProject>(_undo.Pop())!);_dirty=true;}
+    private void Redo(){if(_redo.Count==0)return;_undo.Push(Snapshot());LoadProjectState(JsonSerializer.Deserialize<SceneProject>(_redo.Pop())!);_dirty=true;}
     private void Changed(){RefreshLayers();SelectCurrent();FitCanvas();_canvas.Invalidate();_dirty=true;SetStatus("Изменения есть · автосохранение включено");}
     private void RefreshLayers(){_loading=true;var id=_selected;_layers.Items.Clear();for(int i=_items.Count-1;i>=0;i--)_layers.Items.Add((_items[i].Type==SceneElementType.Image?"▧ ":"T  ")+_items[i].Name);var index=_items.FindIndex(x=>x.Id==id);if(index>=0)_layers.SelectedIndex=_items.Count-1-index;_loading=false;}
     private void Autosave(){if(!_dirty)return;try{SceneProjectService.Save(Project(),_autosave);_dirty=false;SetStatus("Автосохранено "+DateTime.Now.ToString("HH:mm:ss"));}catch(Exception ex){SetStatus("Ошибка автосохранения: "+ex.Message);}}
     private void SaveScene(){using var d=new SaveFileDialog{Filter="Сцена Сектора (*.sector.scene.json)|*.sector.scene.json",FileName="Scene.sector.scene.json",AddExtension=false};if(d.ShowDialog(this)!=DialogResult.OK)return;try{SceneProjectService.Save(Project(),d.FileName);SceneProjectService.Save(Project(),_autosave);_path=d.FileName;_dirty=false;SetStatus("Сохранено: "+Path.GetFileName(_path));}catch(Exception ex){Error("Сохранение",ex);}}
-    private void OpenScene(){using var d=new OpenFileDialog{Filter="Сцены Сектора (*.sector.scene.json)|*.sector.scene.json|Все файлы|*.*"};if(d.ShowDialog(this)!=DialogResult.OK)return;if(_dirty&&MessageBox.Show(this,"Отбросить несохранённые изменения?","Открытие",MessageBoxButtons.YesNo)!=DialogResult.Yes)return;try{Load(SceneProjectService.Load(d.FileName));_path=d.FileName;SceneProjectService.Save(Project(),_autosave);_dirty=false;SetStatus("Открыто: "+Path.GetFileName(_path));}catch(Exception ex){Error("Открытие",ex);}}
-    private void Load(SceneProject p){SceneProjectService.Validate(p);_loading=true;_name.Text=p.Name;_canvasWidth=p.CanvasWidth;_canvasHeight=p.CanvasHeight;_bg=p.BackgroundHex;_items.Clear();_items.AddRange(p.Elements);_selected=_items.LastOrDefault()?.Id??"";_resolution.SelectedIndex=(_canvasWidth,_canvasHeight) switch{(800,600)=>0,(1280,720)=>1,(1366,768)=>2,(1920,1080)=>3,_=>4};_loading=false;_undo.Clear();_redo.Clear();RefreshLayers();SelectCurrent();FitCanvas();_canvas.Invalidate();}
+    private void OpenScene(){using var d=new OpenFileDialog{Filter="Сцены Сектора (*.sector.scene.json)|*.sector.scene.json|Все файлы|*.*"};if(d.ShowDialog(this)!=DialogResult.OK)return;if(_dirty&&MessageBox.Show(this,"Отбросить несохранённые изменения?","Открытие",MessageBoxButtons.YesNo)!=DialogResult.Yes)return;try{LoadProjectState(SceneProjectService.Load(d.FileName));_path=d.FileName;SceneProjectService.Save(Project(),_autosave);_dirty=false;SetStatus("Открыто: "+Path.GetFileName(_path));}catch(Exception ex){Error("Открытие",ex);}}
+    private void LoadProjectState(SceneProject p){SceneProjectService.Validate(p);_loading=true;_name.Text=p.Name;_canvasWidth=p.CanvasWidth;_canvasHeight=p.CanvasHeight;_bg=p.BackgroundHex;_items.Clear();_items.AddRange(p.Elements);_selected=_items.LastOrDefault()?.Id??"";_resolution.SelectedIndex=(_canvasWidth,_canvasHeight) switch{(800,600)=>0,(1280,720)=>1,(1366,768)=>2,(1920,1080)=>3,_=>4};_loading=false;_undo.Clear();_redo.Clear();RefreshLayers();SelectCurrent();FitCanvas();_canvas.Invalidate();}
     private void NewScene(){if(_dirty&&MessageBox.Show(this,"Создать новую сцену без сохранения?","Новая сцена",MessageBoxButtons.YesNo)!=DialogResult.Yes)return;CreateDefault();_dirty=true;}
     private void Shortcuts(object? s,KeyEventArgs e){if(e.Control&&e.KeyCode==Keys.S){SaveScene();e.SuppressKeyPress=true;}else if(e.Control&&e.KeyCode==Keys.Z){Undo();e.SuppressKeyPress=true;}else if(e.Control&&e.KeyCode==Keys.Y){Redo();e.SuppressKeyPress=true;}else if(e.KeyCode==Keys.Delete){DeleteSelected();e.SuppressKeyPress=true;}}
     private void SetStatus(string t)=>_status.Text=t;
