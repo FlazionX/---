@@ -5,12 +5,12 @@ namespace Sector;
 
 public sealed class SceneEditorForm : Form
 {
-    private static readonly Color Bg = Color.FromArgb(243,243,243), Surface = Color.FromArgb(255,255,255),
-        Surface2 = Color.FromArgb(232,232,232), Orange = Color.FromArgb(0,120,215), White = Color.FromArgb(32,32,32),
-        Muted = Color.FromArgb(96,96,96);
+    private static readonly Color Bg = Color.FromArgb(32,32,32), Surface = Color.FromArgb(45,45,48),
+        Surface2 = Color.FromArgb(55,55,58), Orange = Color.FromArgb(0,120,215), White = Color.FromArgb(241,241,241),
+        Muted = Color.FromArgb(170,170,170);
     private readonly List<SceneElement> _items = new();
-    private readonly Panel _canvas = new() { BackColor = Color.FromArgb(225,225,225) };
-    private readonly Panel _host = new() { Dock = DockStyle.Fill, AutoScroll = true, BackColor = Color.FromArgb(225,225,225) };
+    private readonly Panel _canvas = new() { BackColor = Color.FromArgb(28,28,28) };
+    private readonly Panel _host = new() { Dock = DockStyle.Fill, AutoScroll = true, BackColor = Color.FromArgb(28,28,28) };
     private readonly ListBox _layers = new() { Dock = DockStyle.Fill, BackColor = Surface2, ForeColor = White, BorderStyle = BorderStyle.None };
     private readonly TextBox _name = new() { Text = "Новая сцена" };
     private readonly TextBox _text = new();
@@ -25,10 +25,10 @@ public sealed class SceneEditorForm : Form
     private readonly System.Diagnostics.Stopwatch _fpsWatch = new();
     private int _paintCount;
     private SectorEffectPack? _activeEffectPack;
-    private readonly Label _fpsLabel = new() { AutoSize = true, ForeColor = Color.FromArgb(96,96,96), Padding = new Padding(8,7,8,0), Text = "FPS: --" };
+    private readonly Label _fpsLabel = new() { AutoSize = true, ForeColor = Color.FromArgb(170,170,170), Padding = new Padding(8,7,8,0), Text = "FPS: --" };
     private readonly Stack<string> _undo = new(), _redo = new();
     private readonly string _autosave = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Sector","Autosave","scene-0.7.json");
-    private string _selected = "", _bg = "#FFFFFF", _color = "#0078D7", _path = "";
+    private string _selected = "", _bg = "#202020", _color = "#0078D7", _path = "";
     private float _scale = 1;
     private bool _loading, _drag, _resize, _dirty, _showGrid = true;
     private float _zoom = 1f;
