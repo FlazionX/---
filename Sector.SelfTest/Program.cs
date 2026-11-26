@@ -50,6 +50,28 @@ try
     catch (InvalidDataException) { invalidRejected = true; }
     Check(invalidRejected, "Overlong project names must be rejected.");
 
+    var scenePath = Path.Combine(root, "scene.sector.scene.json");
+    var imageBytes = Convert.ToBase64String([137, 80, 78, 71, 13, 10, 26, 10]);
+    var scene = new SceneProject(1, "Тест сцены", 1280, 720, "#101820",
+    [
+        new SceneElement("text-1", "Заголовок", SceneElementType.Text, 40, 50, 400, 90, "Привет", "Segoe UI", 36, "#F0A04B")
+    ]);
+    SceneProjectService.Save(scene, scenePath);
+    var loadedScene = SceneProjectService.Load(scenePath);
+    Check(loadedScene.Name == scene.Name && loadedScene.CanvasWidth == 1280 && loadedScene.CanvasHeight == 720,
+        "Scene project metadata did not round-trip.");
+    Check(loadedScene.Elements.Count == 1 && loadedScene.Elements[0].Text == "Привет" &&
+          loadedScene.Elements[0].X == 40 && loadedScene.Elements[0].ColorHex == "#F0A04B",
+        "Scene element properties did not round-trip.");
+    var invalidSceneRejected = false;
+    try { SceneProjectService.Validate(scene with { CanvasWidth = 100 }); }
+    catch (InvalidDataException) { invalidSceneRejected = true; }
+    Check(invalidSceneRejected, "Invalid scene dimensions must be rejected.");
+    var invalidElementRejected = false;
+    try { SceneProjectService.Validate(scene with { Elements = [scene.Elements[0] with { X = -10 }] }); }
+    catch (InvalidDataException) { invalidElementRejected = true; }
+    Check(invalidElementRejected, "Invalid scene element coordinates must be rejected.");
+
     foreach (var template in SimulationCatalog.All)
     {
         var output = DemoExporter.Export(template, exports);
@@ -68,7 +90,7 @@ try
             $"Safety notice missing from HTML export for {template.Id}.");
     }
 
-    Console.WriteLine("PASS: project JSON round-trip, validation, import, nested folders, duplicate names, self-import guard and all five HTML/BAT exports.");
+    Console.WriteLine("PASS: scene and project JSON round-trips, scene validation, import, nested folders, duplicate names, self-import guard and all five HTML/BAT exports.");
     return 0;
 }
 catch (Exception ex)
