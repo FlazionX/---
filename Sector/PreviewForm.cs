@@ -189,7 +189,7 @@ internal sealed class SimulationCanvas : Panel
             Color.FromArgb(105, 207, 218), left.X + 32, left.Y + 30);
         DrawText(g, "СНЕЖНЫЙ АРХИВ", new Font("Georgia", 27f),
             Color.FromArgb(238, 246, 249), left.X + 30, left.Y + 82);
-        DrawText(g, "Все демонстрационные материалы\\nготовы к просмотру.", new Font("Segoe UI", 13f),
+        DrawText(g, "Все демонстрационные материалы\nготовы к просмотру.", new Font("Segoe UI", 13f),
             Color.FromArgb(177, 199, 207), left.X + 32, left.Y + 142);
         DrawText(g, "LOCAL PREVIEW   ·   NO SYSTEM CHANGES", new Font("Consolas", 9f),
             Color.FromArgb(111, 157, 169), left.X + 32, left.Bottom - 74);
@@ -221,8 +221,9 @@ internal sealed class SimulationCanvas : Panel
         g.FillEllipse(eye, head.Left + head.Width / 3 - 7, head.Top + head.Height / 2 - 5, 13, 17);
         g.FillEllipse(eye, head.Left + head.Width * 2 / 3 - 6, head.Top + head.Height / 2 - 5, 13, 17);
         g.FillEllipse(nose, cx - 6, head.Top + head.Height * 2 / 3, 12, 8);
-        g.DrawArc(new Pen(Color.FromArgb(60, 78, 89), 2f), cx - 13, head.Top + head.Height * 2 / 3 + 5, 13, 14, 0, 90);
-        g.DrawArc(new Pen(Color.FromArgb(60, 78, 89), 2f), cx, head.Top + head.Height * 2 / 3 + 5, 13, 14, 90, 90);
+        using var mouthPen = new Pen(Color.FromArgb(60, 78, 89), 2f);
+        g.DrawArc(mouthPen, cx - 13, head.Top + head.Height * 2 / 3 + 5, 13, 14, 0, 90);
+        g.DrawArc(mouthPen, cx, head.Top + head.Height * 2 / 3 + 5, 13, 14, 90, 90);
 
         var paw = new Rectangle(cx - head.Width / 5, head.Bottom - 12, head.Width * 2 / 5, head.Height / 3);
         g.FillEllipse(fur, paw);
@@ -308,8 +309,9 @@ internal sealed class SimulationCanvas : Panel
 
     private static void DrawText(Graphics g, string text, Font font, Color color, float x, float y)
     {
-        using var brush = new SolidBrush(color);
-        g.DrawString(text, font, brush, x, y);
+        using (font)
+        using (var brush = new SolidBrush(color))
+            g.DrawString(text, font, brush, x, y);
     }
 
     private static void FillRounded(Graphics g, Rectangle rectangle, Color color, int radius)
