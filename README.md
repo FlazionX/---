@@ -84,3 +84,20 @@ dotnet publish Sector/Sector.csproj -c Release -r win-x64 --self-contained true 
 - Настройка отображения сетки при открытии редактора.
 - Подтверждение очистки истории сохраняется как пользовательская настройка.
 - Редактор применяет сохранённые параметры при следующем запуске.
+
+
+## 0.7.0 — Retro Studio additions
+
+### Resource Studio
+- Resource manager for images, audio, fonts, JSON and project assets.
+- Preset manager with background, foreground, accent, font family and size.
+- Palette manager with validated `#RRGGBB` colors.
+- Local TTF/OTF font import; fonts remain private to Sector and are not installed into Windows.
+- Safe visual effect packs in JSON: scanlines, glitch, vignette and noise. Effect packs are declarative data and do not execute DLL, BAT or arbitrary code.
+
+### Scene editor
+- Imported fonts can be selected by family name in text object properties.
+- Saved presets and palettes can be applied to the current scene.
+- Live FPS counter.
+- Animated GIF export from the scene canvas.
+- Optional MP4 export through FFmpeg if `ffmpeg` is installed and available on PATH.
