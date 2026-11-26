@@ -14,12 +14,12 @@ public sealed class MainForm : Form
     private readonly Label _status = new();
     private readonly List<HistoryEntry> _history = new();
 
-    private static readonly Color Bg = Color.FromArgb(243, 243, 243);
-    private static readonly Color Surface = Color.FromArgb(255, 255, 255);
-    private static readonly Color Surface2 = Color.FromArgb(232, 232, 232);
+    private static readonly Color Bg = Color.FromArgb(32, 32, 32);
+    private static readonly Color Surface = Color.FromArgb(45, 45, 48);
+    private static readonly Color Surface2 = Color.FromArgb(55, 55, 58);
     private static readonly Color Orange = Color.FromArgb(0, 120, 215);
-    private static readonly Color MainText = Color.FromArgb(32, 32, 32);
-    private static readonly Color Muted = Color.FromArgb(96, 96, 96);
+    private static readonly Color MainText = Color.FromArgb(241, 241, 241);
+    private static readonly Color Muted = Color.FromArgb(170, 170, 170);
 
     public MainForm()
     {
@@ -96,7 +96,7 @@ public sealed class MainForm : Form
         _content.Padding = new Padding(22, 4, 4, 4);
         body.Controls.Add(_content, 1, 0);
 
-        var footer = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(230, 230, 230), Padding = new Padding(20, 4, 20, 4) };
+        var footer = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(38, 38, 38), Padding = new Padding(20, 4, 20, 4) };
         _status.Dock = DockStyle.Fill;
         _status.ForeColor = Muted;
         _status.TextAlign = ContentAlignment.MiddleLeft;
@@ -111,7 +111,7 @@ public sealed class MainForm : Form
         {
             Text = label, Width = 176, Height = 42, Margin = new Padding(0, 0, 0, 7),
             FlatStyle = FlatStyle.Flat, TextAlign = ContentAlignment.MiddleLeft,
-            Padding = new Padding(13, 0, 0, 0), BackColor = selected ? Color.FromArgb(220, 235, 248) : Surface,
+            Padding = new Padding(13, 0, 0, 0), BackColor = selected ? Color.FromArgb(0, 78, 140) : Surface,
             ForeColor = selected ? Orange : MainText, Font = new Font("Segoe UI", 9.5f),
             Cursor = Cursors.Hand
         };
