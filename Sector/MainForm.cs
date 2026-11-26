@@ -14,12 +14,12 @@ public sealed class MainForm : Form
     private readonly Label _status = new();
     private readonly List<HistoryEntry> _history = new();
 
-    private static readonly Color Bg = Color.FromArgb(20, 23, 28);
-    private static readonly Color Surface = Color.FromArgb(29, 34, 41);
-    private static readonly Color Surface2 = Color.FromArgb(37, 43, 51);
-    private static readonly Color Orange = Color.FromArgb(235, 133, 43);
-    private static readonly Color MainText = Color.FromArgb(235, 238, 242);
-    private static readonly Color Muted = Color.FromArgb(151, 161, 174);
+    private static readonly Color Bg = Color.FromArgb(243, 243, 243);
+    private static readonly Color Surface = Color.FromArgb(255, 255, 255);
+    private static readonly Color Surface2 = Color.FromArgb(232, 232, 232);
+    private static readonly Color Orange = Color.FromArgb(0, 120, 215);
+    private static readonly Color MainText = Color.FromArgb(32, 32, 32);
+    private static readonly Color Muted = Color.FromArgb(96, 96, 96);
 
     public MainForm()
     {
@@ -47,7 +47,7 @@ public sealed class MainForm : Form
     private void BuildShell()
     {
         var shell = new TableLayoutPanel { Dock = DockStyle.Fill, ColumnCount = 1, RowCount = 4, BackColor = Bg };
-        shell.RowStyles.Add(new RowStyle(SizeType.Absolute, 5));
+        shell.RowStyles.Add(new RowStyle(SizeType.Absolute, 3));
         shell.RowStyles.Add(new RowStyle(SizeType.Absolute, 72));
         shell.RowStyles.Add(new RowStyle(SizeType.Percent, 100));
         shell.RowStyles.Add(new RowStyle(SizeType.Absolute, 30));
@@ -59,12 +59,12 @@ public sealed class MainForm : Form
         var brand = new Label
         {
             Text = "Сектор", Dock = DockStyle.Left, Width = 260,
-            ForeColor = MainText, Font = new Font("Georgia", 24f, FontStyle.Regular),
+            ForeColor = MainText, Font = new Font("Segoe UI Light", 24f, FontStyle.Regular),
             TextAlign = ContentAlignment.MiddleLeft
         };
         var edition = new Label
         {
-            Text = "VIRTUAL STUDIO     /     2014–2016", Dock = DockStyle.Right, Width = 310,
+            Text = "РЕДАКТОР ВИЗУАЛЬНЫХ СЦЕН", Dock = DockStyle.Right, Width = 310,
             ForeColor = Muted, Font = new Font("Segoe UI", 8.5f),
             TextAlign = ContentAlignment.MiddleRight
         };
@@ -96,7 +96,7 @@ public sealed class MainForm : Form
         _content.Padding = new Padding(22, 4, 4, 4);
         body.Controls.Add(_content, 1, 0);
 
-        var footer = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(16, 19, 23), Padding = new Padding(20, 4, 20, 4) };
+        var footer = new Panel { Dock = DockStyle.Fill, BackColor = Color.FromArgb(230, 230, 230), Padding = new Padding(20, 4, 20, 4) };
         _status.Dock = DockStyle.Fill;
         _status.ForeColor = Muted;
         _status.TextAlign = ContentAlignment.MiddleLeft;
@@ -111,7 +111,7 @@ public sealed class MainForm : Form
         {
             Text = label, Width = 176, Height = 42, Margin = new Padding(0, 0, 0, 7),
             FlatStyle = FlatStyle.Flat, TextAlign = ContentAlignment.MiddleLeft,
-            Padding = new Padding(13, 0, 0, 0), BackColor = selected ? Color.FromArgb(61, 49, 38) : Surface,
+            Padding = new Padding(13, 0, 0, 0), BackColor = selected ? Color.FromArgb(220, 235, 248) : Surface,
             ForeColor = selected ? Orange : MainText, Font = new Font("Segoe UI", 9.5f),
             Cursor = Cursors.Hand
         };
@@ -174,7 +174,7 @@ public sealed class MainForm : Form
         {
             Text = text, AutoSize = true, Height = 34, MinimumSize = new Size(100, 32),
             FlatStyle = FlatStyle.Flat, BackColor = primary ? Orange : Surface2,
-            ForeColor = primary ? Color.FromArgb(25, 25, 25) : MainText,
+            ForeColor = primary ? Color.White : MainText,
             Padding = new Padding(12, 2, 12, 2), Margin = new Padding(0, 0, 9, 0),
             Cursor = Cursors.Hand, Font = new Font("Segoe UI Semibold", 8.8f)
         };
