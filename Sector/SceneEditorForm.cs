@@ -14,7 +14,7 @@ public sealed class SceneEditorForm : Form
     private readonly ListBox _layers = new() { Dock = DockStyle.Fill, BackColor = Surface2, ForeColor = White, BorderStyle = BorderStyle.None };
     private readonly TextBox _name = new() { Text = "Новая сцена" };
     private readonly TextBox _text = new();
-    private readonly TextBox _objectName = new();\n    private readonly TextBox _objectName = new();
+    private readonly TextBox _objectName = new();
     private readonly NumericUpDown _x = Num(0,3840), _y = Num(0,2160), _w = Num(8,3840,240), _h = Num(8,2160,60), _font = Num(6,180,28);
     private readonly ComboBox _resolution = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 145 };
     private readonly Label _status = new() { Dock = DockStyle.Fill, ForeColor = Muted, TextAlign = ContentAlignment.MiddleLeft };
