@@ -343,7 +343,7 @@ public sealed class MainForm : Form
         var info = new Label
         {
             Dock = DockStyle.Fill, ForeColor = Muted, Font = new Font("Segoe UI", 10f),
-            Text = "Версия: 0.3.0\nПлатформа: Windows / .NET 8 WinForms\n\nКаталог данных:\n" + _dataRoot +
+            Text = "Версия: 0.4.0\nПлатформа: Windows / .NET 8 WinForms\n\nКаталог данных:\n" + _dataRoot +
                    "\n\nИмпортируемые скрипты хранятся как обычные файлы и не запускаются приложением."
         };
         page.Controls.Add(info, 0, 2);
