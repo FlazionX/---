@@ -34,6 +34,22 @@ try
     catch (InvalidOperationException) { selfImportRejected = true; }
     Check(selfImportRejected, "Importing a folder into itself must be rejected.");
 
+    var projectPath = Path.Combine(root, "roundtrip.sector.json");
+    var original = new SimulationTemplate("custom-test", "Мой проект", "Проверка сохранения проекта",
+        "TEST", Color.FromArgb(22, 145, 201), SimulationStyle.Messenger, "МОЙ ПРОЕКТ", "2.1");
+    ProjectFileService.Save(original, projectPath);
+    var restored = ProjectFileService.Load(projectPath);
+    Check(restored.Name == original.Name, "Project name was not restored.");
+    Check(restored.Description == original.Description, "Project description was not restored.");
+    Check(restored.Style == original.Style, "Project style was not restored.");
+    Check(restored.Accent.ToArgb() == original.Accent.ToArgb(), "Project accent color was not restored.");
+    Check(restored.Mark == original.Mark && restored.Version == original.Version, "Project metadata was not restored.");
+
+    var invalidRejected = false;
+    try { ProjectFileService.Validate(original with { Name = new string('x', 41) }); }
+    catch (InvalidDataException) { invalidRejected = true; }
+    Check(invalidRejected, "Overlong project names must be rejected.");
+
     foreach (var template in SimulationCatalog.All)
     {
         var output = DemoExporter.Export(template, exports);
@@ -52,7 +68,7 @@ try
             $"Safety notice missing from HTML export for {template.Id}.");
     }
 
-    Console.WriteLine("PASS: import, nested folders, duplicate names, self-import guard and all five HTML/BAT exports.");
+    Console.WriteLine("PASS: project JSON round-trip, validation, import, nested folders, duplicate names, self-import guard and all five HTML/BAT exports.");
     return 0;
 }
 catch (Exception ex)
