@@ -249,16 +249,16 @@ public sealed class MainForm : Form
             Dock = DockStyle.Fill, View = View.Details, FullRowSelect = true,
             BackColor = Surface, ForeColor = MainText, BorderStyle = BorderStyle.None
         };
-        list.Columns.Add("Имя файла", 330);
+        list.Columns.Add("Файл / путь", 390);
         list.Columns.Add("Тип", 110);
         list.Columns.Add("Размер", 110);
         list.Columns.Add("Изменён", 170);
         try
         {
-            foreach (var file in Directory.EnumerateFiles(_importsRoot).OrderBy(Path.GetFileName, StringComparer.OrdinalIgnoreCase))
+            foreach (var file in Directory.EnumerateFiles(_importsRoot, "*", SearchOption.AllDirectories).OrderBy(x => Path.GetRelativePath(_importsRoot, x), StringComparer.OrdinalIgnoreCase))
             {
                 var info = new FileInfo(file);
-                var item = new ListViewItem(info.Name);
+                var item = new ListViewItem(Path.GetRelativePath(_importsRoot, file));
                 item.SubItems.Add(info.Extension.ToUpperInvariant());
                 item.SubItems.Add(FormatSize(info.Length));
                 item.SubItems.Add(info.LastWriteTime.ToString("dd.MM.yyyy HH:mm"));
@@ -398,7 +398,7 @@ public sealed class MainForm : Form
     private static void OpenFolder(string path)
     {
         Directory.CreateDirectory(path);
-        Process.Start(new ProcessStartInfo("explorer.exe", path) { UseShellExecute = true });
+        var start = new ProcessStartInfo("explorer.exe") { UseShellExecute = true };\n        start.ArgumentList.Add(path);\n        Process.Start(start);
     }
 
     private void AddHistory(string name, string action)
