@@ -136,6 +136,19 @@ public sealed class EditorForm : Form
         root.Controls.Add(_status, 0, 3);
     }
 
+    private static void AddField(TableLayoutPanel parent, string label, ComboBox box, int row)
+    {
+        box.Dock = DockStyle.Bottom;
+        box.BackColor = Surface2;
+        box.ForeColor = MainText;
+        box.FlatStyle = FlatStyle.Flat;
+        box.Font = new Font("Segoe UI", 10f);
+        var panel = new Panel { Dock = DockStyle.Fill, BackColor = Surface };
+        panel.Controls.Add(box);
+        panel.Controls.Add(new Label { Text = label, Dock = DockStyle.Top, Height = 22, ForeColor = Muted });
+        parent.Controls.Add(panel, 0, row);
+    }
+
     private static void AddField(TableLayoutPanel parent, string label, TextBox box, int row, int maxLength, bool multiline = false)
     {
         box.MaxLength = maxLength;
