@@ -185,7 +185,7 @@ public sealed class MainForm : Form
     private void ShowLibrary()
     {
         var page = CreatePageLayout();
-        page.Controls.Add(CreatePageHeader("Библиотека симуляций", "Пять самостоятельных визуальных тем. Общие эффекты — разные характеры и оформление."), 0, 0);
+        page.Controls.Add(CreatePageHeader("Библиотека симуляций", "{SimulationCatalog.All.Count} самостоятельных визуальных тем. Общие эффекты — разные характеры и оформление."), 0, 0);
         var actions = CreateActionBar();
         actions.Controls.Add(MakeButton("Импортировать файлы", ImportFiles, true));
         actions.Controls.Add(MakeButton("Импортировать папку", ImportFolder));
