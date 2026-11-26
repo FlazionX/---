@@ -13,15 +13,27 @@ public static class ImportService
         Directory.CreateDirectory(destination);
         var imported = new List<string>();
         var skipped = 0;
+        long totalBytes = 0;
+
         foreach (var path in paths.Distinct(StringComparer.OrdinalIgnoreCase))
         {
+            if (imported.Count >= MaxFiles) { skipped++; continue; }
             if (!File.Exists(path)) { skipped++; continue; }
+
             var info = new FileInfo(path);
-            if (info.Length > MaxFileBytes) { skipped++; continue; }
+            if ((File.GetAttributes(path) & FileAttributes.ReparsePoint) != 0 ||
+                info.Length > MaxFileBytes || totalBytes + info.Length > MaxTotalBytes)
+            {
+                skipped++;
+                continue;
+            }
+
             var target = GetUniquePath(destination, Path.GetFileName(path));
             File.Copy(path, target, overwrite: false);
             imported.Add(target);
+            totalBytes += info.Length;
         }
+
         return new ImportResult(imported.Count, skipped, imported);
     }
 
@@ -30,25 +42,29 @@ public static class ImportService
         if (!Directory.Exists(source)) throw new DirectoryNotFoundException("Выбранная папка не найдена.");
         Directory.CreateDirectory(destination);
 
+        var root = Path.GetFullPath(source);
         var imported = new List<string>();
         var skipped = 0;
         long totalBytes = 0;
         var pending = new Stack<string>();
-        pending.Push(Path.GetFullPath(source));
+        pending.Push(root);
 
         while (pending.Count > 0 && imported.Count < MaxFiles)
         {
             var current = pending.Pop();
             foreach (var directory in Directory.EnumerateDirectories(current))
             {
-                var attributes = File.GetAttributes(directory);
-                if ((attributes & FileAttributes.ReparsePoint) == 0) pending.Push(directory);
-                else skipped++;
+                if ((File.GetAttributes(directory) & FileAttributes.ReparsePoint) == 0)
+                    pending.Push(directory);
+                else
+                    skipped++;
             }
 
             foreach (var file in Directory.EnumerateFiles(current))
             {
                 if (imported.Count >= MaxFiles) { skipped++; continue; }
+                if ((File.GetAttributes(file) & FileAttributes.ReparsePoint) != 0) { skipped++; continue; }
+
                 var info = new FileInfo(file);
                 if (info.Length > MaxFileBytes || totalBytes + info.Length > MaxTotalBytes)
                 {
@@ -56,7 +72,7 @@ public static class ImportService
                     continue;
                 }
 
-                var relative = Path.GetRelativePath(source, file);
+                var relative = Path.GetRelativePath(root, file);
                 var safeRelative = relative.Replace('\\', Path.DirectorySeparatorChar)
                                            .Replace('/', Path.DirectorySeparatorChar);
                 if (Path.IsPathRooted(safeRelative) || safeRelative.Split(Path.DirectorySeparatorChar).Any(x => x == ".."))
