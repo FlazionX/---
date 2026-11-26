@@ -61,7 +61,7 @@ public sealed class SceneEditorForm : Form
         Controls.Add(root);
         var bar = new FlowLayoutPanel { Dock=DockStyle.Fill, WrapContents=false, AutoScroll=true, BackColor=Bg, Padding=new Padding(0,5,0,0) };
         AddButton(bar,"Новый",NewScene); AddButton(bar,"Открыть",OpenScene); AddButton(bar,"Сохранить",SaveScene,true);
-        AddButton(bar,"+ Текст",AddText); AddButton(bar,"+ Изображение",AddImage); AddButton(bar,"Дублировать",DuplicateSelected); AddButton(bar,"По центру",CenterSelected); AddButton(bar,"Сетка",ToggleGrid); AddButton(bar,"−",()=>SetZoom(_zoom-0.1f)); AddButton(bar,"+",()=>SetZoom(_zoom+0.1f)); AddButton(bar,"Отменить",Undo); AddButton(bar,"Повторить",Redo); AddButton(bar,"Запись GIF / MP4",ToggleGifRecording); AddButton(bar,"Шрифты",()=>{ResourceLibrary.EnsureFolders();System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe",ResourceLibrary.Fonts){UseShellExecute=true});}); bar.Controls.Add(_fpsLabel);
+        AddButton(bar,"+ Текст",AddText); AddButton(bar,"+ Изображение",AddImage); AddButton(bar,"Дублировать",DuplicateSelected); AddButton(bar,"По центру",CenterSelected); AddButton(bar,"Сетка",ToggleGrid); AddButton(bar,"−",()=>SetZoom(_zoom-0.1f)); AddButton(bar,"+",()=>SetZoom(_zoom+0.1f)); AddButton(bar,"Отменить",Undo); AddButton(bar,"Повторить",Redo); AddButton(bar,"Запись GIF / MP4",ToggleGifRecording); AddButton(bar,"Шрифты",()=>{ResourceLibrary.EnsureFolders();System.Diagnostics.Process.Start(new System.Diagnostics.ProcessStartInfo("explorer.exe",ResourceLibrary.Fonts){UseShellExecute=true});}); AddButton(bar,"Пресет",ApplyPreset); AddButton(bar,"Палитра",ApplyPalette); bar.Controls.Add(_fpsLabel);
         root.Controls.Add(bar,0,0);
 
         var body = new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=3, RowCount=1, BackColor=Bg };
@@ -127,7 +127,7 @@ public sealed class SceneEditorForm : Form
     private void AddText()
     {
         PushUndo();var e=new SceneElement(Guid.NewGuid().ToString("N"),"Текст "+(_items.Count+1),SceneElementType.Text,80,140,400,70,"Новый текст","Segoe UI",30,_color);
-        _items.Add(e);_selected=e.Id;Changed();
+        _items.Add(e);_selected=e.Id;_fontFamily.Text=e.FontFamily;Changed();
     }
     private void AddImage()
     {
@@ -167,7 +167,7 @@ public sealed class SceneEditorForm : Form
     private void SelectCurrent()
     {
         var e=_items.FirstOrDefault(x=>x.Id==_selected);_loading=true;
-        if(e!=null){_objectName.Text=e.Name;_text.Text=e.Text;_x.Value=Clamp(e.X,_x);_y.Value=Clamp(e.Y,_y);_w.Value=Clamp(e.Width,_w);_h.Value=Clamp(e.Height,_h);_font.Value=Clamp(e.FontSize,_font);_color=e.ColorHex;}
+        if(e!=null){_objectName.Text=e.Name;_text.Text=e.Text;_x.Value=Clamp(e.X,_x);_y.Value=Clamp(e.Y,_y);_w.Value=Clamp(e.Width,_w);_h.Value=Clamp(e.Height,_h);_font.Value=Clamp(e.FontSize,_font);_fontFamily.Text=e.FontFamily;_color=e.ColorHex;}
         else{_objectName.Clear();_text.Clear();_x.Value=0;_y.Value=0;_w.Value=8;_h.Value=8;_font.Value=28;}
         _loading=false;_canvas.Invalidate();
     }
@@ -315,6 +315,40 @@ public sealed class SceneEditorForm : Form
             throw new InvalidOperationException("Для MP4 нужен FFmpeg в PATH. GIF можно экспортировать без дополнительных программ.");
         }
         finally { try { Directory.Delete(temp, true); } catch { } }
+    }
+
+
+    private void ApplyPreset()
+    {
+        ResourceLibrary.EnsureFolders();
+        using var dialog = new OpenFileDialog { InitialDirectory = ResourceLibrary.Presets, Filter = "Пресеты Сектора (*.json)|*.json" };
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        try
+        {
+            var preset = System.Text.Json.JsonSerializer.Deserialize<SectorPreset>(File.ReadAllText(dialog.FileName))
+                ?? throw new InvalidDataException("Файл пресета пуст.");
+            PushUndo(); _bg = preset.Background; _color = preset.Foreground; _fontFamily.Text = preset.FontFamily;
+            _font.Value = Math.Clamp(preset.FontSize, (int)_font.Minimum, (int)_font.Maximum);
+            ApplyProperties(); _canvas.Invalidate(); SetStatus("Пресет применён: " + preset.Name);
+        }
+        catch (Exception ex) { Error("Применение пресета", ex); }
+    }
+
+    private void ApplyPalette()
+    {
+        ResourceLibrary.EnsureFolders();
+        using var dialog = new OpenFileDialog { InitialDirectory = ResourceLibrary.Palettes, Filter = "Палитры Сектора (*.json)|*.json" };
+        if (dialog.ShowDialog(this) != DialogResult.OK) return;
+        try
+        {
+            var palette = System.Text.Json.JsonSerializer.Deserialize<SectorPalette>(File.ReadAllText(dialog.FileName))
+                ?? throw new InvalidDataException("Файл палитры пуст.");
+            PushUndo(); _bg = palette.Background; _color = palette.Foreground;
+            var index = _items.FindIndex(x => x.Id == _selected);
+            if (index >= 0) _items[index] = _items[index] with { ColorHex = palette.Foreground };
+            Changed(); SetStatus("Палитра применена: " + palette.Name);
+        }
+        catch (Exception ex) { Error("Применение палитры", ex); }
     }
 
     private void Autosave(){if(!_dirty)return;try{SceneProjectService.Save(Project(),_autosave);_dirty=false;SetStatus("Автосохранено "+DateTime.Now.ToString("HH:mm:ss"));}catch(Exception ex){SetStatus("Ошибка автосохранения: "+ex.Message);}}
