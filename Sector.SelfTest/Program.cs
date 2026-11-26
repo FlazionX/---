@@ -72,7 +72,7 @@ try
     catch (InvalidDataException) { invalidElementRejected = true; }
     Check(invalidElementRejected, "Invalid scene element coordinates must be rejected.");
 
-    Check(SimulationCatalog.All.Count == 12, "The retro simulation library should contain ten themes.");
+    Check(SimulationCatalog.All.Count == 12, "The retro simulation library should contain twelve themes.");
 
     foreach (var template in SimulationCatalog.All)
     {
