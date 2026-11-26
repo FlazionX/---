@@ -242,7 +242,7 @@ public sealed class MainForm : Form
 
     private void ShowEditor()
     {
-        using var editor = new EditorForm();
+        using var editor = new SceneEditorForm();
         editor.ShowDialog(this);
     }
 
