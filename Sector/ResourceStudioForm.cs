@@ -1,4 +1,5 @@
 using System.Drawing.Text;
+using System.Diagnostics;
 using System.Text.Json;
 
 namespace Sector;
@@ -89,6 +90,7 @@ public static class ResourceLibrary
 public sealed class ResourceStudioForm : Form
 {
     private readonly TabControl _tabs = new() { Dock = DockStyle.Fill };
+    private ListBox? _fontList;
     private readonly ListView _resources = new() { Dock = DockStyle.Fill, View = View.Details, FullRowSelect = true };
     private readonly Label _status = new() { Dock = DockStyle.Bottom, Height = 30, TextAlign = ContentAlignment.MiddleLeft };
     private readonly Color _bg = Color.FromArgb(20,23,28), _surface = Color.FromArgb(29,34,41), _text = Color.FromArgb(235,238,242), _orange = Color.FromArgb(235,133,43);
@@ -185,7 +187,7 @@ public sealed class ResourceStudioForm : Form
         var bar = Toolbar(tab);
         AddButton(bar, "Импортировать TTF / OTF", ImportFonts, true);
         AddButton(bar, "Открыть папку", () => Open(ResourceLibrary.Fonts));
-        var list = new ListBox { Dock = DockStyle.Fill, BackColor = _surface, ForeColor = _text, BorderStyle = BorderStyle.None };
+        var list = _fontList = new ListBox { Dock = DockStyle.Fill, BackColor = _surface, ForeColor = _text, BorderStyle = BorderStyle.None };
         foreach (var f in Directory.EnumerateFiles(ResourceLibrary.Fonts).Where(x => Path.GetExtension(x).Equals(".ttf", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(x).Equals(".otf", StringComparison.OrdinalIgnoreCase)))
             list.Items.Add(Path.GetFileName(f));
         tab.Controls.Add(list); tab.Controls.SetChildIndex(list, 0);
@@ -234,9 +236,17 @@ public sealed class ResourceStudioForm : Form
         {
             var result = ImportService.ImportFiles(d.FileNames, ResourceLibrary.Fonts);
             SetStatus($"Импортировано шрифтов: {result.ImportedCount}. Они доступны в папке Fonts.");
-            BuildFontsTab();
+            RefreshFontList();
         }
         catch (Exception ex) { Error("Импорт шрифтов", ex); }
+    }
+
+    private void RefreshFontList()
+    {
+        if (_fontList is null) return;
+        _fontList.Items.Clear();
+        foreach (var f in Directory.EnumerateFiles(ResourceLibrary.Fonts).Where(x => Path.GetExtension(x).Equals(".ttf", StringComparison.OrdinalIgnoreCase) || Path.GetExtension(x).Equals(".otf", StringComparison.OrdinalIgnoreCase)))
+            _fontList.Items.Add(Path.GetFileName(f));
     }
 
     private void RefreshResources()
@@ -293,5 +303,38 @@ public sealed class EffectDialog : Form
         var save = new Button { Text = "Сохранить", Dock = DockStyle.Fill, BackColor = Color.FromArgb(235,133,43) };
         save.Click += (_,_) => { Result = new SectorEffectPack(name.Text,effect.Text,color.Text,(int)intensity.Value); try { ResourceLibrary.SaveEffectPack(Result); DialogResult=DialogResult.OK; Close(); } catch(Exception ex){MessageBox.Show(this,ex.Message);} };
         grid.Controls.Add(save,1,4);
+    }
+}
+
+public static class FontLibrary
+{
+    private static readonly PrivateFontCollection Fonts = new();
+    private static readonly HashSet<string> Loaded = new(StringComparer.OrdinalIgnoreCase);
+    private static readonly object Gate = new();
+
+    public static Font CreateFont(string family, float size, FontStyle style = FontStyle.Regular)
+    {
+        LoadImportedFonts();
+        try { return new Font(family, size, style, GraphicsUnit.Pixel); }
+        catch { return new Font(FontFamily.GenericSansSerif, size, style, GraphicsUnit.Pixel); }
+    }
+
+    public static IReadOnlyList<string> GetFamilyNames()
+    {
+        LoadImportedFonts();
+        lock (Gate) return Fonts.Families.Select(x => x.Name).ToArray();
+    }
+
+    private static void LoadImportedFonts()
+    {
+        ResourceLibrary.EnsureFolders();
+        lock (Gate)
+        {
+            foreach (var file in Directory.EnumerateFiles(ResourceLibrary.Fonts).Where(x => x.EndsWith(".ttf", StringComparison.OrdinalIgnoreCase) || x.EndsWith(".otf", StringComparison.OrdinalIgnoreCase)))
+            {
+                if (!Loaded.Add(file)) continue;
+                try { Fonts.AddFontFile(file); } catch { Loaded.Remove(file); }
+            }
+        }
     }
 }
