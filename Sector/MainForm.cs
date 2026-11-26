@@ -85,6 +85,7 @@ public sealed class MainForm : Form
         body.Controls.Add(sidebar, 0, 0);
         AddNav(sidebar, "Библиотека", ShowLibrary, true);
         AddNav(sidebar, "Редактор", ShowEditor);
+        AddNav(sidebar, "Студия ресурсов", ShowResourceStudio);
         AddNav(sidebar, "Мои файлы", ShowFiles);
         AddNav(sidebar, "Виртуальная среда", ShowEnvironment);
         AddNav(sidebar, "История", ShowHistory);
@@ -244,6 +245,12 @@ public sealed class MainForm : Form
     {
         using var editor = new SceneEditorForm();
         editor.ShowDialog(this);
+    }
+
+    private void ShowResourceStudio()
+    {
+        using var studio = new ResourceStudioForm();
+        studio.ShowDialog(this);
     }
 
     private void ShowFiles()
