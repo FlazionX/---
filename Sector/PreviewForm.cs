@@ -242,7 +242,7 @@ internal sealed class SimulationCanvas : Panel
         DrawText(g, "TERMINAL SESSION 04     /     LOCAL DEMO", new Font("Consolas", 10f),
             Color.FromArgb(255, 105, 95), 42, 34);
         var art = "        /\_/\\\n       ( o.o )\n        > ^ <\n\n     [ SECTOR ]";
-        g.DrawString(art, new Font("Consolas", 24f, FontStyle.Bold), red, 46, 104);
+        using var artFont = new Font("Consolas", 24f, FontStyle.Bold);\n        g.DrawString(art, artFont, red, 46, 104);
         g.DrawString("ВИЗУАЛЬНАЯ СЦЕНА ЗАПУЩЕНА", mono, pale, 46, Height * 2 / 3);
         g.DrawString("ФАЙЛОВАЯ СИСТЕМА НЕ ИЗМЕНЯЕТСЯ\nСЕАНС: PREVIEW   ·   STATUS: SAFE",
             small, red, 46, Height * 2 / 3 + 38);
@@ -288,7 +288,7 @@ internal sealed class SimulationCanvas : Panel
         var height = Math.Min(360, Height - 80);
         var box = new Rectangle((Width - width) / 2, (Height - height) / 2, width, height);
         FillRounded(g, box, Color.FromArgb(43, 46, 50), 5);
-        g.FillRectangle(new SolidBrush(Color.FromArgb(167, 105, 35)), box.X, box.Y, box.Width, 42);
+        using var headerBrush = new SolidBrush(Color.FromArgb(167, 105, 35));\n        g.FillRectangle(headerBrush, box.X, box.Y, box.Width, 42);
         DrawText(g, "СЕКТОР / CLASSIC WINDOW", new Font("Segoe UI Semibold", 10f),
             Color.White, box.X + 18, box.Y + 12);
         DrawText(g, "Демонстрационная панель", new Font("Segoe UI Semibold", 19f),
@@ -317,7 +317,7 @@ internal sealed class SimulationCanvas : Panel
     {
         if (rectangle.Width <= 0 || rectangle.Height <= 0) return;
         using var path = new GraphicsPath();
-        var d = radius * 2;
+        var d = Math.Min(radius * 2, Math.Min(rectangle.Width, rectangle.Height));
         path.AddArc(rectangle.X, rectangle.Y, d, d, 180, 90);
         path.AddArc(rectangle.Right - d, rectangle.Y, d, d, 270, 90);
         path.AddArc(rectangle.Right - d, rectangle.Bottom - d, d, d, 0, 90);
