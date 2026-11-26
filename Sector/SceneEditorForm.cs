@@ -125,6 +125,28 @@ public sealed class SceneEditorForm : Form
             _items.Add(e);_selected=e.Id;Changed();
         }catch(Exception ex){Error("Изображение",ex);}
     }
+
+    private void DuplicateSelected()
+    {
+        var source=_items.FirstOrDefault(e=>e.Id==_selected);if(source is null)return;
+        PushUndo();var copy=source with{Id=Guid.NewGuid().ToString("N"),Name=source.Name+" копия",
+            X=Math.Clamp(source.X+24,0,Math.Max(0,_canvasWidth-source.Width)),
+            Y=Math.Clamp(source.Y+24,0,Math.Max(0,_canvasHeight-source.Height))};
+        _items.Add(copy);_selected=copy.Id;Changed();
+    }
+    private void CenterSelected()
+    {
+        var i=_items.FindIndex(e=>e.Id==_selected);if(i<0)return;PushUndo();var e=_items[i];
+        _items[i]=e with{X=(_canvasWidth-e.Width)/2f,Y=(_canvasHeight-e.Height)/2f};Changed();
+    }
+    private void ToggleGrid(){_showGrid=!_showGrid;_canvas.Invalidate();SetStatus(_showGrid?"Сетка включена":"Сетка выключена");}
+    private void SetZoom(float value){_zoom=Math.Clamp(value,.25f,2.5f);FitCanvas();SetStatus("Масштаб сцены: "+Math.Round(_zoom*100)+"%");}
+    private void NudgeSelected(int dx,int dy)
+    {
+        var i=_items.FindIndex(e=>e.Id==_selected);if(i<0)return;PushUndo();var e=_items[i];
+        _items[i]=e with{X=Math.Clamp(e.X+dx,0,_canvasWidth-e.Width),Y=Math.Clamp(e.Y+dy,0,_canvasHeight-e.Height)};Changed();
+    }
+
     private void DeleteSelected(){var i=_items.FindIndex(e=>e.Id==_selected);if(i<0)return;PushUndo();_items.RemoveAt(i);_selected=_items.LastOrDefault()?.Id??"";Changed();}
     private void MoveLayer(int dir){var i=_items.FindIndex(e=>e.Id==_selected);var j=i+dir;if(i<0||j<0||j>=_items.Count)return;PushUndo();(_items[i],_items[j])=(_items[j],_items[i]);Changed();}
     private void SelectLayer(){if(_loading||_layers.SelectedIndex<0)return;_selected=_items[_items.Count-1-_layers.SelectedIndex].Id;SelectCurrent();}
@@ -157,12 +179,18 @@ public sealed class SceneEditorForm : Form
     private void FitCanvas()
     {
         if(_canvasWidth<1)return;var w=Math.Max(200,_host.ClientSize.Width-25);var h=Math.Max(200,_host.ClientSize.Height-25);
-        _scale=Math.Clamp(Math.Min(w/(float)_canvasWidth,h/(float)_canvasHeight),.1f,1f);
+        _scale=Math.Clamp(Math.Min(w/(float)_canvasWidth,h/(float)_canvasHeight)*_zoom,.1f,2.5f);
         _canvas.Size=new Size((int)(_canvasWidth*_scale),(int)(_canvasHeight*_scale));_canvas.Invalidate();
     }
     private void PaintCanvas(object? s,PaintEventArgs e)
     {
         var g=e.Graphics;g.SmoothingMode=SmoothingMode.AntiAlias;g.Clear(ColorTranslator.FromHtml(_bg));g.ScaleTransform(_scale,_scale);
+        if(_showGrid)
+        {
+            using var gridPen=new Pen(Color.FromArgb(30,210,220,230),1/_scale);
+            for(int x=0;x<=_canvasWidth;x+=40)g.DrawLine(gridPen,x,0,x,_canvasHeight);
+            for(int y=0;y<=_canvasHeight;y+=40)g.DrawLine(gridPen,0,y,_canvasWidth,y);
+        }
         foreach(var item in _items)
         {
             var rect=new RectangleF(item.X,item.Y,item.Width,item.Height);
@@ -198,7 +226,12 @@ public sealed class SceneEditorForm : Form
     private void OpenScene(){using var d=new OpenFileDialog{Filter="Сцены Сектора (*.sector.scene.json)|*.sector.scene.json|Все файлы|*.*"};if(d.ShowDialog(this)!=DialogResult.OK)return;if(_dirty&&MessageBox.Show(this,"Отбросить несохранённые изменения?","Открытие",MessageBoxButtons.YesNo)!=DialogResult.Yes)return;try{LoadProjectState(SceneProjectService.Load(d.FileName));_path=d.FileName;SceneProjectService.Save(Project(),_autosave);_dirty=false;SetStatus("Открыто: "+Path.GetFileName(_path));}catch(Exception ex){Error("Открытие",ex);}}
     private void LoadProjectState(SceneProject p){SceneProjectService.Validate(p);_loading=true;_name.Text=p.Name;_canvasWidth=p.CanvasWidth;_canvasHeight=p.CanvasHeight;_bg=p.BackgroundHex;_items.Clear();_items.AddRange(p.Elements);_selected=_items.LastOrDefault()?.Id??"";_resolution.SelectedIndex=(_canvasWidth,_canvasHeight) switch{(800,600)=>0,(1280,720)=>1,(1366,768)=>2,(1920,1080)=>3,_=>4};_loading=false;_undo.Clear();_redo.Clear();RefreshLayers();SelectCurrent();FitCanvas();_canvas.Invalidate();}
     private void NewScene(){if(_dirty&&MessageBox.Show(this,"Создать новую сцену без сохранения?","Новая сцена",MessageBoxButtons.YesNo)!=DialogResult.Yes)return;CreateDefault();_dirty=true;}
-    private void Shortcuts(object? s,KeyEventArgs e){if(e.Control&&e.KeyCode==Keys.S){SaveScene();e.SuppressKeyPress=true;}else if(e.Control&&e.KeyCode==Keys.Z){Undo();e.SuppressKeyPress=true;}else if(e.Control&&e.KeyCode==Keys.Y){Redo();e.SuppressKeyPress=true;}else if(e.KeyCode==Keys.Delete){DeleteSelected();e.SuppressKeyPress=true;}}
+    private void Shortcuts(object? s,KeyEventArgs e){if(e.Control&&e.KeyCode==Keys.S){SaveScene();e.SuppressKeyPress=true;}else if(e.Control&&e.KeyCode==Keys.Z){Undo();e.SuppressKeyPress=true;}else if(e.Control&&e.KeyCode==Keys.Y){Redo();e.SuppressKeyPress=true;}else if(e.Control&&e.KeyCode==Keys.D){DuplicateSelected();e.SuppressKeyPress=true;}
+        else if(e.KeyCode==Keys.Delete){DeleteSelected();e.SuppressKeyPress=true;}
+        else if(e.KeyCode==Keys.Left){NudgeSelected(e.Shift?-10:-1,0);e.SuppressKeyPress=true;}
+        else if(e.KeyCode==Keys.Right){NudgeSelected(e.Shift?10:1,0);e.SuppressKeyPress=true;}
+        else if(e.KeyCode==Keys.Up){NudgeSelected(0,e.Shift?-10:-1);e.SuppressKeyPress=true;}
+        else if(e.KeyCode==Keys.Down){NudgeSelected(0,e.Shift?10:1);e.SuppressKeyPress=true;}}
     private void SetStatus(string t)=>_status.Text=t;
     private void Error(string title,Exception ex)=>MessageBox.Show(this,ex.Message,title,MessageBoxButtons.OK,MessageBoxIcon.Warning);
 }
