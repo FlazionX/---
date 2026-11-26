@@ -441,6 +441,8 @@ public sealed class MainForm : Form
         _ => $"{bytes / 1024d / 1024d:0.0} МБ"
     };
 
+    private void SetStatus(string message) => _status.Text = message;
+
     private void ShowError(string title, Exception ex)
     {
         SetStatus(title + ": " + ex.Message);
