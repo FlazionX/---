@@ -19,6 +19,11 @@ public sealed class SceneEditorForm : Form
     private readonly ComboBox _resolution = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 145 };
     private readonly Label _status = new() { Dock = DockStyle.Fill, ForeColor = Muted, TextAlign = ContentAlignment.MiddleLeft };
     private readonly System.Windows.Forms.Timer _timer = new() { Interval = 1500 };
+    private readonly System.Windows.Forms.Timer _recordTimer = new() { Interval = 100 };
+    private readonly List<Bitmap> _recordFrames = new();
+    private readonly System.Diagnostics.Stopwatch _fpsWatch = new();
+    private int _paintCount;
+    private readonly Label _fpsLabel = new() { AutoSize = true, ForeColor = Color.FromArgb(151,161,174), Padding = new Padding(8,7,8,0), Text = "FPS: --" };
     private readonly Stack<string> _undo = new(), _redo = new();
     private readonly string _autosave = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),"Sector","Autosave","scene-0.7.json");
     private string _selected = "", _bg = "#101820", _color = "#F0A04B", _path = "";
@@ -40,9 +45,11 @@ public sealed class SceneEditorForm : Form
             _resolution.SelectedItem = preferences.DefaultResolution;
         RestoreOrCreate();
         _timer.Tick += (_,_) => Autosave();
+        _recordTimer.Tick += (_,_) => CaptureGifFrame();
+        _fpsWatch.Start();
         _timer.Start();
         KeyDown += Shortcuts;
-        FormClosing += (_,_) => { Autosave(); _timer.Stop(); };
+        FormClosing += (_,_) => { Autosave(); _timer.Stop(); _recordTimer.Stop(); foreach (var frame in _recordFrames) frame.Dispose(); _recordFrames.Clear(); };
         _host.Resize += (_,_) => FitCanvas();
     }
 
@@ -53,7 +60,7 @@ public sealed class SceneEditorForm : Form
         Controls.Add(root);
         var bar = new FlowLayoutPanel { Dock=DockStyle.Fill, WrapContents=false, AutoScroll=true, BackColor=Bg, Padding=new Padding(0,5,0,0) };
         AddButton(bar,"Новый",NewScene); AddButton(bar,"Открыть",OpenScene); AddButton(bar,"Сохранить",SaveScene,true);
-        AddButton(bar,"+ Текст",AddText); AddButton(bar,"+ Изображение",AddImage); AddButton(bar,"Дублировать",DuplicateSelected); AddButton(bar,"По центру",CenterSelected); AddButton(bar,"Сетка",ToggleGrid); AddButton(bar,"−",()=>SetZoom(_zoom-0.1f)); AddButton(bar,"+",()=>SetZoom(_zoom+0.1f)); AddButton(bar,"Отменить",Undo); AddButton(bar,"Повторить",Redo);
+        AddButton(bar,"+ Текст",AddText); AddButton(bar,"+ Изображение",AddImage); AddButton(bar,"Дублировать",DuplicateSelected); AddButton(bar,"По центру",CenterSelected); AddButton(bar,"Сетка",ToggleGrid); AddButton(bar,"−",()=>SetZoom(_zoom-0.1f)); AddButton(bar,"+",()=>SetZoom(_zoom+0.1f)); AddButton(bar,"Отменить",Undo); AddButton(bar,"Повторить",Redo); AddButton(bar,"Запись GIF",ToggleGifRecording); bar.Controls.Add(_fpsLabel);
         root.Controls.Add(bar,0,0);
 
         var body = new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=3, RowCount=1, BackColor=Bg };
@@ -191,6 +198,8 @@ public sealed class SceneEditorForm : Form
     private void PaintCanvas(object? s,PaintEventArgs e)
     {
         var g=e.Graphics;g.SmoothingMode=SmoothingMode.AntiAlias;g.Clear(ColorTranslator.FromHtml(_bg));g.ScaleTransform(_scale,_scale);
+        _paintCount++;
+        if (_fpsWatch.ElapsedMilliseconds >= 1000) { _fpsLabel.Text = $"FPS: {_paintCount * 1000d / _fpsWatch.ElapsedMilliseconds:0}"; _paintCount = 0; _fpsWatch.Restart(); }
         if(_showGrid)
         {
             using var gridPen=new Pen(Color.FromArgb(30,210,220,230),1/_scale);
@@ -227,6 +236,55 @@ public sealed class SceneEditorForm : Form
     private void Redo(){if(_redo.Count==0)return;_undo.Push(Snapshot());LoadProjectState(JsonSerializer.Deserialize<SceneProject>(_redo.Pop())!);_dirty=true;}
     private void Changed(){RefreshLayers();SelectCurrent();FitCanvas();_canvas.Invalidate();_dirty=true;SetStatus("Изменения есть · автосохранение включено");}
     private void RefreshLayers(){_loading=true;var id=_selected;_layers.Items.Clear();for(int i=_items.Count-1;i>=0;i--)_layers.Items.Add((_items[i].Type==SceneElementType.Image?"▧ ":"T  ")+_items[i].Name);var index=_items.FindIndex(x=>x.Id==id);if(index>=0)_layers.SelectedIndex=_items.Count-1-index;_loading=false;}
+
+    private void ToggleGifRecording()
+    {
+        if (_recordTimer.Enabled)
+        {
+            _recordTimer.Stop();
+            SaveGifRecording();
+            return;
+        }
+        foreach (var frame in _recordFrames) frame.Dispose();
+        _recordFrames.Clear();
+        _recordTimer.Start();
+        SetStatus("Запись GIF началась. Нажмите «Запись GIF» ещё раз для завершения.");
+    }
+
+    private void CaptureGifFrame()
+    {
+        if (_recordFrames.Count >= 120) { _recordTimer.Stop(); SaveGifRecording(); return; }
+        try
+        {
+            var frame = new Bitmap(Math.Max(1, _canvas.Width), Math.Max(1, _canvas.Height));
+            _canvas.DrawToBitmap(frame, new Rectangle(Point.Empty, frame.Size));
+            _recordFrames.Add(frame);
+            SetStatus($"Запись GIF · кадров: {_recordFrames.Count}/120");
+        }
+        catch (Exception ex) { _recordTimer.Stop(); SetStatus("Ошибка записи GIF: " + ex.Message); }
+    }
+
+    private void SaveGifRecording()
+    {
+        if (_recordFrames.Count < 2) { SetStatus("Для GIF нужно минимум два кадра."); foreach (var f in _recordFrames) f.Dispose(); _recordFrames.Clear(); return; }
+        using var dialog = new SaveFileDialog { Filter = "Анимированный GIF (*.gif)|*.gif", FileName = "Sector-scene.gif" };
+        if (dialog.ShowDialog(this) != DialogResult.OK) { foreach (var f in _recordFrames) f.Dispose(); _recordFrames.Clear(); return; }
+        try
+        {
+            var encoder = System.Drawing.Imaging.ImageCodecInfo.GetImageEncoders().First(x => x.MimeType == "image/gif");
+            using var parameters = new System.Drawing.Imaging.EncoderParameters(1);
+            parameters.Param[0] = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.SaveFlag, (long)System.Drawing.Imaging.EncoderValue.MultiFrame);
+            _recordFrames[0].Save(dialog.FileName, encoder, parameters);
+            parameters.Param[0] = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.SaveFlag, (long)System.Drawing.Imaging.EncoderValue.FrameDimensionTime);
+            for (var i = 1; i < _recordFrames.Count; i++) _recordFrames[0].SaveAdd(_recordFrames[i], parameters);
+            parameters.Param[0] = new System.Drawing.Imaging.EncoderParameter(System.Drawing.Imaging.Encoder.SaveFlag, (long)System.Drawing.Imaging.EncoderValue.Flush);
+            _recordFrames[0].SaveAdd(parameters);
+            SetStatus($"GIF экспортирован: {Path.GetFileName(dialog.FileName)}");
+        }
+        catch (Exception ex) { Error("Экспорт GIF", ex); }
+        finally { foreach (var f in _recordFrames) f.Dispose(); _recordFrames.Clear(); }
+    }
+
     private void Autosave(){if(!_dirty)return;try{SceneProjectService.Save(Project(),_autosave);_dirty=false;SetStatus("Автосохранено "+DateTime.Now.ToString("HH:mm:ss"));}catch(Exception ex){SetStatus("Ошибка автосохранения: "+ex.Message);}}
     private void SaveScene(){using var d=new SaveFileDialog{Filter="Сцена Сектора (*.sector.scene.json)|*.sector.scene.json",FileName="Scene.sector.scene.json",AddExtension=false};if(d.ShowDialog(this)!=DialogResult.OK)return;try{SceneProjectService.Save(Project(),d.FileName);SceneProjectService.Save(Project(),_autosave);_path=d.FileName;_dirty=false;SetStatus("Сохранено: "+Path.GetFileName(_path));}catch(Exception ex){Error("Сохранение",ex);}}
     private void OpenScene(){using var d=new OpenFileDialog{Filter="Сцены Сектора (*.sector.scene.json)|*.sector.scene.json|Все файлы|*.*"};if(d.ShowDialog(this)!=DialogResult.OK)return;if(_dirty&&MessageBox.Show(this,"Отбросить несохранённые изменения?","Открытие",MessageBoxButtons.YesNo)!=DialogResult.Yes)return;try{LoadProjectState(SceneProjectService.Load(d.FileName));_path=d.FileName;SceneProjectService.Save(Project(),_autosave);_dirty=false;SetStatus("Открыто: "+Path.GetFileName(_path));}catch(Exception ex){Error("Открытие",ex);}}
