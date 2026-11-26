@@ -13,7 +13,8 @@ public sealed class SceneEditorForm : Form
     private readonly Panel _host = new() { Dock = DockStyle.Fill, AutoScroll = true, BackColor = Color.FromArgb(12,14,18) };
     private readonly ListBox _layers = new() { Dock = DockStyle.Fill, BackColor = Surface2, ForeColor = White, BorderStyle = BorderStyle.None };
     private readonly TextBox _name = new() { Text = "Новая сцена" };
-    private readonly TextBox _text = new();\n    private readonly TextBox _objectName = new();
+    private readonly TextBox _text = new();
+    private readonly TextBox _objectName = new();\n    private readonly TextBox _objectName = new();
     private readonly NumericUpDown _x = Num(0,3840), _y = Num(0,2160), _w = Num(8,3840,240), _h = Num(8,2160,60), _font = Num(6,180,28);
     private readonly ComboBox _resolution = new() { DropDownStyle = ComboBoxStyle.DropDownList, Width = 145 };
     private readonly Label _status = new() { Dock = DockStyle.Fill, ForeColor = Muted, TextAlign = ContentAlignment.MiddleLeft };
@@ -71,14 +72,14 @@ public sealed class SceneEditorForm : Form
         right.Controls.Add(Header("СВОЙСТВА"),0,0);
         var props=new TableLayoutPanel { Dock=DockStyle.Fill, ColumnCount=1, RowCount=10, AutoScroll=true, BackColor=Surface };
         for(int i=0;i<10;i++) props.RowStyles.Add(new RowStyle(SizeType.Absolute,i==2?100:62));
-        AddField(props,"Название сцены",_name,0); AddField(props,"Текст объекта",_text,1,true);
-        AddField(props,"X",_x,2); AddField(props,"Y",_y,3); AddField(props,"Ширина",_w,4); AddField(props,"Высота",_h,5); AddField(props,"Размер шрифта",_font,6);
+        AddField(props,"Название сцены",_name,0); AddField(props,"Имя слоя",_objectName,1); AddField(props,"Текст объекта",_text,2,true);
+        AddField(props,"X",_x,3); AddField(props,"Y",_y,4); AddField(props,"Ширина",_w,5); AddField(props,"Высота",_h,6); AddField(props,"Размер шрифта",_font,7);
         var colorPanel=new Panel { Dock=DockStyle.Fill, BackColor=Surface }; colorPanel.Controls.Add(new Label { Text="Цвет текста",Dock=DockStyle.Top,Height=22,ForeColor=Muted });
-        var colorButton=Button("Выбрать цвет",ChooseColor); colorButton.Dock=DockStyle.Bottom; colorPanel.Controls.Add(colorButton); props.Controls.Add(colorPanel,0,7);
-        var apply=Button("Применить свойства",ApplyProperties,true); apply.Dock=DockStyle.Fill; props.Controls.Add(apply,0,8);
+        var colorButton=Button("Выбрать цвет",ChooseColor); colorButton.Dock=DockStyle.Bottom; colorPanel.Controls.Add(colorButton); props.Controls.Add(colorPanel,0,8);
+        var apply=Button("Применить свойства",ApplyProperties,true); apply.Dock=DockStyle.Fill; props.Controls.Add(apply,0,9);
         right.Controls.Add(props,0,1); body.Controls.Add(right,2,0);
         root.Controls.Add(_status,0,2);
-        _resolution.SelectedIndex=1;
+        _resolution.SelectedIndex=1; _name.TextChanged += (_,_) => { if(!_loading) _dirty=true; };
     }
 
     private static NumericUpDown Num(decimal min,decimal max,decimal val=0)=>new(){Minimum=min,Maximum=max,Value=val,Dock=DockStyle.Bottom,BackColor=Surface2,ForeColor=White,BorderStyle=BorderStyle.FixedSingle};
