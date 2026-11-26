@@ -137,6 +137,8 @@ internal sealed class SimulationCanvas : Panel
             case SimulationStyle.Messenger: DrawMessenger(g); break;
             case SimulationStyle.AmberPanel: DrawAmber(g); break;
         }
+        using (var accentBrush = new SolidBrush(_template.Accent))
+            g.FillRectangle(accentBrush, 0, 0, Width, 5);
         DrawDemoWatermark(g);
     }
 
@@ -144,7 +146,7 @@ internal sealed class SimulationCanvas : Panel
     {
         using var font = new Font("Segoe UI Semibold", 8f);
         using var brush = new SolidBrush(Color.FromArgb(170, 255, 255, 255));
-        g.DrawString("СЕКТОР  /  ВИЗУАЛЬНАЯ СИМУЛЯЦИЯ", font, brush, 22, Height - 30);
+        g.DrawString("СЕКТОР  /  " + _template.Name.ToUpperInvariant() + "  /  " + _template.Mark, font, brush, 22, Height - 30);
     }
 
     private void DrawBlue(Graphics g)
