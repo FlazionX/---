@@ -8,7 +8,7 @@
     <ApplicationManifest>app.manifest</ApplicationManifest>
     <AssemblyName>Sector</AssemblyName>
     <RootNamespace>Sector</RootNamespace>
-    <Version>0.4.0</Version>
+    <Version>0.5.0</Version>
     <ApplicationHighDpiMode>PerMonitorV2</ApplicationHighDpiMode>
   </PropertyGroup>
 </Project>
